@@ -1,4 +1,4 @@
-package com.Jitter.Jitter.Model;
+package com.Jitter.Jitter.Backend.Models;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -10,13 +10,11 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Users {
+public class User {
 
     @Id
     private int id;
     private String username;
     private String password;
     private String email;
-
-
 }
