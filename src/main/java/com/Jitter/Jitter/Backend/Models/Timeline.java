@@ -8,7 +8,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.List;
 
-@Document(collation = "timeline")
+@Document(collection = "timeline")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
