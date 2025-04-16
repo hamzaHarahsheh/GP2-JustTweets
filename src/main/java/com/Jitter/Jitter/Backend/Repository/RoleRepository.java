@@ -3,6 +3,10 @@ package com.Jitter.Jitter.Backend.Repository;
 import com.Jitter.Jitter.Backend.Models.Role;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
-public interface RolesRepository extends MongoRepository<Role, String> {
+import java.util.Optional;
+
+public interface RoleRepository extends MongoRepository<Role, String> {
+
+    Optional<Role> findByType(String type);
 
 }

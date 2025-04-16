@@ -1,8 +1,12 @@
 package com.Jitter.Jitter.Backend.Repository;
 
-import com.Jitter.Jitter.Backend.Models.TimeLine;
+import com.Jitter.Jitter.Backend.Models.Timeline;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
-public interface TimeLineRepo extends MongoRepository<TimeLine, String> {
+import java.util.Optional;
+
+public interface TimelineRepository extends MongoRepository<Timeline, String> {
+
+    Optional<Timeline> findByUserId(String userId);
 
 }
