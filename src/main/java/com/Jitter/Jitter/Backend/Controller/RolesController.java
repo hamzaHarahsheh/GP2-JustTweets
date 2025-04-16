@@ -1,6 +1,6 @@
 package com.Jitter.Jitter.Backend.Controller;
 
-import com.Jitter.Jitter.Backend.Repository.RolesRepo;
+import com.Jitter.Jitter.Backend.Repository.RoleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -8,5 +8,5 @@ import org.springframework.web.bind.annotation.RestController;
 public class RolesController {
 
     @Autowired
-    private RolesRepo rolesRepo;
+    private RoleRepository rolesRepo;
 }

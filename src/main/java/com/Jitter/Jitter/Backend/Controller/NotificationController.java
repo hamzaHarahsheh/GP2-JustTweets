@@ -1,6 +1,6 @@
 package com.Jitter.Jitter.Backend.Controller;
 
-import com.Jitter.Jitter.Backend.Repository.NotificationRepo;
+import com.Jitter.Jitter.Backend.Repository.NotificationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -8,5 +8,5 @@ import org.springframework.web.bind.annotation.RestController;
 public class NotificationController {
 
     @Autowired
-    private NotificationRepo notificationRepo;
+    private NotificationRepository notificationRepo;
 }

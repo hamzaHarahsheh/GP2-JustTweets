@@ -1,6 +1,6 @@
 package com.Jitter.Jitter.Backend.Controller;
 
-import com.Jitter.Jitter.Backend.Repository.BookMarkRepo;
+import com.Jitter.Jitter.Backend.Repository.BookMarkRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -8,5 +8,5 @@ import org.springframework.web.bind.annotation.RestController;
 public class BookMarkController {
 
     @Autowired
-    private BookMarkRepo bookMarkRepo;
+    private BookMarkRepository bookMarkRepo;
 }

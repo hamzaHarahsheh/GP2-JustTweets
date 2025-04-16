@@ -1,7 +1,7 @@
 package com.Jitter.Jitter.Backend.Controller;
 
 import com.Jitter.Jitter.Backend.Models.User;
-import com.Jitter.Jitter.Backend.Repository.UserRepo;
+import com.Jitter.Jitter.Backend.Repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController {
 
     @Autowired
-    private UserRepo userRepo;
+    private UserRepository userRepo;
     @PostMapping("/addUser")
     public void addUser(@RequestBody User users) {
         userRepo.save(users);

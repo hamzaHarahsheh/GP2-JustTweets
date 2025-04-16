@@ -1,6 +1,6 @@
 package com.Jitter.Jitter.Backend.Controller;
 
-import com.Jitter.Jitter.Backend.Repository.PostRepo;
+import com.Jitter.Jitter.Backend.Repository.PostRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -8,5 +8,5 @@ import org.springframework.web.bind.annotation.RestController;
 public class PostController {
 
     @Autowired
-    private PostRepo postRepo;
+    private PostRepository postRepo;
 }

@@ -1,6 +1,6 @@
 package com.Jitter.Jitter.Backend.Controller;
 
-import com.Jitter.Jitter.Backend.Repository.PermissionRepo;
+import com.Jitter.Jitter.Backend.Repository.PermissionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -8,5 +8,5 @@ import org.springframework.web.bind.annotation.RestController;
 public class PermissionController {
 
     @Autowired
-    private PermissionRepo permissionRepo;
+    private PermissionRepository permissionRepo;
 }
