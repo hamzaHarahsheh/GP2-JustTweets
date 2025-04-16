@@ -6,13 +6,15 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-@Document
+@Document(collation = "bookmarks")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class BookMark {
 
     @Id
+    private String id;
+
     private String userId;
     private String postId;
 

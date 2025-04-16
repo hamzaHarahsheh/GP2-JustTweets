@@ -6,7 +6,9 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-@Document
+import java.util.List;
+
+@Document(collation = "timeline")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -15,6 +17,8 @@ public class TimeLine {
     @Id
     private String userId;
     private String postId;
+
+    private List<String> postIds;
 
     public String getUserId() {
         return userId;

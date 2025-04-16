@@ -6,7 +6,10 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-@Document
+import java.util.Date;
+import java.util.List;
+
+@Document(collation = "posts")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -14,14 +17,20 @@ public class Post {
 
     @Id
     private String id;
+
     private String userId;
+
     private String content;
     private String imageUrl;
-    private String createdAt;
-    private String updatedAt;
+
+    private Date createdAt;
+    private Date updatedAt;
+
     private int likesCount;
     private int commentsCount;
+
     private int retweetsCount;
+    private List<Media> media;
 
     public String getId() {
         return id;
@@ -55,19 +64,19 @@ public class Post {
         this.imageUrl = imageUrl;
     }
 
-    public String getCreatedAt() {
+    public Date getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(String createdAt) {
+    public void setCreatedAt(Date createdAt) {
         this.createdAt = createdAt;
     }
 
-    public String getUpdatedAt() {
+    public Date getUpdatedAt() {
         return updatedAt;
     }
 
-    public void setUpdatedAt(String updatedAt) {
+    public void setUpdatedAt(Date updatedAt) {
         this.updatedAt = updatedAt;
     }
 

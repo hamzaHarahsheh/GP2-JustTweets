@@ -6,7 +6,9 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-@Document
+import java.util.Date;
+
+@Document(collection = "comments")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -14,10 +16,12 @@ public class Comment {
 
     @Id
     public String id;
+
     public String postId;
     public String userId;
+
     public String content;
-    public String createdAt;
+    public Date createdAt;
 
     public String getId() {
         return id;
@@ -51,11 +55,11 @@ public class Comment {
         this.content = content;
     }
 
-    public String getCreatedAt() {
+    public Date getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(String createdAt) {
+    public void setCreatedAt(Date createdAt) {
         this.createdAt = createdAt;
     }
 }

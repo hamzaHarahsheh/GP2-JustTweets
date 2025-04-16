@@ -6,7 +6,9 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-@Document
+import java.util.Date;
+
+@Document(collation = "likes")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -14,9 +16,11 @@ public class Like {
 
     @Id
     private String id;
+
     private String userId;
     private String postId;
-    private String createdAt;
+
+    private Date createdAt;
 
     public String getId() {
         return id;
@@ -42,11 +46,11 @@ public class Like {
         this.postId = postId;
     }
 
-    public String getCreatedAt() {
+    public Date getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(String createdAt) {
+    public void setCreatedAt(Date createdAt) {
         this.createdAt = createdAt;
     }
 }

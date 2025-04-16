@@ -6,7 +6,10 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-@Document
+import java.util.Date;
+import java.util.List;
+
+@Document(collation = "users")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -14,19 +17,24 @@ public class User {
 
     @Id
     private String id;
+
     private String username;
     private String password;
     private String email;
     private String bio;
     private String profilePicUrl;
-    private String createdAt;
-    private String updatedAt;
 
-    public int getId() {
+    private Date createdAt;
+    private Date updatedAt;
+
+    List<String> roles;
+    List<String> permissions;
+
+    public String getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(String id) {
         this.id = id;
     }
 
@@ -70,19 +78,19 @@ public class User {
         this.profilePicUrl = profilePicUrl;
     }
 
-    public String getCreatedAt() {
+    public Date getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(String createdAt) {
+    public void setCreatedAt(Date createdAt) {
         this.createdAt = createdAt;
     }
 
-    public String getUpdatedAt() {
+    public Date getUpdatedAt() {
         return updatedAt;
     }
 
-    public void setUpdatedAt(String updatedAt) {
+    public void setUpdatedAt(Date updatedAt) {
         this.updatedAt = updatedAt;
     }
 }
