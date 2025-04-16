@@ -22,35 +22,4 @@ public class Follow {
 
     private Date createdAt;
 
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public String getFollowerId() {
-        return followerId;
-    }
-
-    public void setFollowerId(String followerId) {
-        this.followerId = followerId;
-    }
-
-    public String getFollowingId() {
-        return followingId;
-    }
-
-    public void setFollowingId(String followingId) {
-        this.followingId = followingId;
-    }
-
-    public Date getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(Date createdAt) {
-        this.createdAt = createdAt;
-    }
 }
