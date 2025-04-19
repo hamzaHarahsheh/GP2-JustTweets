@@ -4,32 +4,21 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.Date;
 import java.util.List;
 
-@Document(collection = "posts")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Document(collection = "posts")
 public class Post {
-
     @Id
     private String id;
-
     private String userId;
-
     private String content;
-    private String imageUrl;
-
-    @DBRef
-    private List<Media> media;
-
+    private List<Media> image;
     private Date createdAt;
     private Date updatedAt;
-    private int likesCount;
-    private int commentsCount;
-    private int retweetsCount;
 }

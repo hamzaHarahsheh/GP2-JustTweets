@@ -6,7 +6,6 @@ import com.Jitter.Jitter.Backend.Repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.io.IOException;
 import java.util.Date;
 import java.util.List;
@@ -14,14 +13,11 @@ import java.util.Optional;
 
 @Service
 public class UserService {
-
     private final UserRepository userRepository;
-    private final MediaService mediaService;
 
     @Autowired
-    public UserService(UserRepository userRepository, MediaService mediaService) {
+    public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
-        this.mediaService = mediaService;
     }
 
     public List<User> getAll() {
@@ -45,7 +41,11 @@ public class UserService {
         user.setUpdatedAt(new Date());
 
         if (profilePicture != null && !profilePicture.isEmpty()) {
-            Media media = mediaService.saveMedia(profilePicture);
+            Media media = new Media();
+            media.setFileName(profilePicture.getOriginalFilename());
+            media.setType(profilePicture.getContentType());
+            media.setData(profilePicture.getBytes());
+            media.setCreatedAt(new Date());
             user.setProfilePicture(media);
         }
 
@@ -71,12 +71,11 @@ public class UserService {
         return userRepository.findById(id)
                 .map(user -> {
                     try {
-                        // Delete old profile picture if exists
-                        if (user.getProfilePicture() != null) {
-                            mediaService.deleteMedia(user.getProfilePicture().getId());
-                        }
-
-                        Media media = mediaService.saveMedia(file);
+                        Media media = new Media();
+                        media.setFileName(file.getOriginalFilename());
+                        media.setType(file.getContentType());
+                        media.setData(file.getBytes());
+                        media.setCreatedAt(new Date());
                         user.setProfilePicture(media);
                         user.setUpdatedAt(new Date());
                         return userRepository.save(user);
@@ -111,11 +110,6 @@ public class UserService {
     }
 
     public void delete(String id) {
-        userRepository.findById(id).ifPresent(user -> {
-            if (user.getProfilePicture() != null) {
-                mediaService.deleteMedia(user.getProfilePicture().getId());
-            }
-            userRepository.deleteById(id);
-        });
+        userRepository.deleteById(id);
     }
 }

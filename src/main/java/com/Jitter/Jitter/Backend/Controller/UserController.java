@@ -3,12 +3,12 @@ package com.Jitter.Jitter.Backend.Controller;
 import com.Jitter.Jitter.Backend.Models.User;
 import com.Jitter.Jitter.Backend.Service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.io.IOException;
 import java.util.List;
 
@@ -16,12 +16,16 @@ import java.util.List;
 @RequestMapping("/users")
 @CrossOrigin(origins = "http://localhost:3000")
 public class UserController {
-
     private final UserService userService;
 
     @Autowired
     public UserController(UserService userService) {
         this.userService = userService;
+    }
+
+    @GetMapping
+    public List<User> getAllUsers() {
+        return userService.getAll();
     }
 
     @GetMapping("/{id}")
@@ -43,11 +47,6 @@ public class UserController {
         return userService.getByEmail(email)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
-    }
-
-    @GetMapping
-    public List<User> getAllUsers() {
-        return userService.getAll();
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -98,5 +97,20 @@ public class UserController {
     public ResponseEntity<Void> deleteUser(@PathVariable String id) {
         userService.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{id}/profile-picture")
+    public ResponseEntity<?> getProfilePicture(@PathVariable String id) {
+        return userService.getById(id)
+                .map(user -> {
+                    if (user.getProfilePicture() == null || user.getProfilePicture().getData() == null) {
+                        return ResponseEntity.notFound().build();
+                    }
+                    return ResponseEntity.ok()
+                            .contentType(MediaType.parseMediaType(user.getProfilePicture().getType()))
+                            .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + id + "\"")
+                            .body(user.getProfilePicture().getData());
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
 }

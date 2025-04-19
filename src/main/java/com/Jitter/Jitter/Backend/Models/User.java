@@ -5,7 +5,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 import java.util.Date;
 
@@ -14,20 +13,15 @@ import java.util.Date;
 @NoArgsConstructor
 @AllArgsConstructor
 public class User {
-
     @Id
     private String id;
-
     @Indexed(unique = true)
     private String username;
     private String password;
     @Indexed(unique = true)
     private String email;
     private String bio;
-
-    @DBRef
     private Media profilePicture;
-
     private Date createdAt;
     private Date updatedAt;
 }
