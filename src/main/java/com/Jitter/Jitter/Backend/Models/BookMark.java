@@ -17,5 +17,4 @@ public class BookMark {
 
     private String userId;
     private String postId;
-
 }

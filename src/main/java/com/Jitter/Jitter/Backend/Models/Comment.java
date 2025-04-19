@@ -22,5 +22,4 @@ public class Comment {
 
     public String content;
     public Date createdAt;
-
 }

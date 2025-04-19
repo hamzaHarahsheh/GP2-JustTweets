@@ -15,5 +15,5 @@ public class Permission {
     @Id
     private String id;
     private String type;
-
+    private String userId;
 }

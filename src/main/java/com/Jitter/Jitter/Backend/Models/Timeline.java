@@ -17,7 +17,4 @@ public class Timeline {
     @Id
     private String userId;
     private String postId;
-
-    private List<String> postIds;
-
 }

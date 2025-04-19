@@ -30,6 +30,4 @@ public class Post {
     private int commentsCount;
 
     private int retweetsCount;
-    private List<Media> media;
-
 }

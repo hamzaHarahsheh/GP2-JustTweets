@@ -21,5 +21,4 @@ public class Like {
     private String postId;
 
     private Date createdAt;
-
 }

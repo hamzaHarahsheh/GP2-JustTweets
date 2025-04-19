@@ -21,5 +21,4 @@ public class Follow {
     private String followingId;
 
     private Date createdAt;
-
 }

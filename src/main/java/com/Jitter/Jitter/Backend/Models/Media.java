@@ -22,5 +22,4 @@ public class Media {
     private String url;
 
     private Date createdAt;
-
 }

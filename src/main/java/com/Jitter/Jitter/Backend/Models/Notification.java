@@ -22,5 +22,4 @@ public class Notification {
     private String sourceUserId;
 
     private Date createdAt;
-
 }
