@@ -30,6 +30,16 @@ public class CommentController {
         return commentRepo.findAll();
     }
 
+    @GetMapping("/post/{postId}")
+    public List<Comment> getCommentsByPostId(@PathVariable String postId) {
+        return commentRepo.findByPostId(postId);
+    }
+
+    @GetMapping("/user/{userId}")
+    public List<Comment> getCommentsByUserId(@PathVariable String userId) {
+        return commentRepo.findByUserId(userId);
+    }
+
     @PutMapping("/{id}")
     public Comment updateComment(@PathVariable String id, @RequestBody Comment updatedComment) {
         updatedComment.setId(id);
