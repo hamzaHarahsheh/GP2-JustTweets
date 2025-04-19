@@ -17,7 +17,6 @@ public class UserController {
     @Autowired
     private UserRepository userRepo;
 
-
     @GetMapping("/{id}")
     public Optional<User> getUserById(@PathVariable String id) {
         return userRepo.findById(id);

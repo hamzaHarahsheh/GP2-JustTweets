@@ -19,7 +19,7 @@ public class Media {
     private String postId;
 
     private String type;
-    private String url;
-
+    private String fileName;
+    private byte[] data;
     private Date createdAt;
 }
