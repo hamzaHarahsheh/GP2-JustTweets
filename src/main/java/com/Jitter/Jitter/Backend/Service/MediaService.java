@@ -4,28 +4,39 @@ import com.Jitter.Jitter.Backend.Models.Media;
 import com.Jitter.Jitter.Backend.Repository.MediaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
-
 @Service
 public class MediaService {
-
-    @Autowired
     private final MediaRepository mediaRepository;
 
+    @Autowired
     public MediaService(MediaRepository mediaRepository) {
         this.mediaRepository = mediaRepository;
     }
 
-    public List<Media> getByPostId(String postId) {
-        return mediaRepository.findByPostId(postId);
-    }
-
-    public Media save(Media media) {
+    public Media saveMedia(MultipartFile file) throws IOException {
+        Media media = new Media();
+        media.setFileName(file.getOriginalFilename());
+        media.setType(file.getContentType());
+        media.setData(file.getBytes());
+        media.setCreatedAt(new Date());
         return mediaRepository.save(media);
     }
 
-    public void delete(String id) {
+    public void deleteMedia(String id) {
         mediaRepository.deleteById(id);
+    }
+
+    public void deleteMultipleMedia(List<Media> mediaList) {
+        mediaRepository.deleteAll(mediaList);
+    }
+
+    public Optional<Media> getMedia(String id) {
+        return mediaRepository.findById(id);
     }
 }

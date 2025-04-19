@@ -1,92 +1,102 @@
 package com.Jitter.Jitter.Backend.Controller;
 
 import com.Jitter.Jitter.Backend.Models.User;
-import com.Jitter.Jitter.Backend.Repository.UserRepository;
+import com.Jitter.Jitter.Backend.Service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Date;
+import java.io.IOException;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/users")
+@CrossOrigin(origins = "http://localhost:3000")
 public class UserController {
 
+    private final UserService userService;
+
     @Autowired
-    private UserRepository userRepo;
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
 
     @GetMapping("/{id}")
-    public Optional<User> getUserById(@PathVariable String id) {
-        return userRepo.findById(id);
+    public ResponseEntity<User> getUserById(@PathVariable String id) {
+        return userService.getById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/username/{username}")
-    public Optional<User> getUserByUsername(@PathVariable String username) {
-        return userRepo.findByUsername(username);
+    public ResponseEntity<User> getUserByUsername(@PathVariable String username) {
+        return userService.getByUsername(username)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/email/{email}")
+    public ResponseEntity<User> getUserByEmail(@PathVariable String email) {
+        return userService.getByEmail(email)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping
     public List<User> getAllUsers() {
-        return userRepo.findAll();
+        return userService.getAll();
     }
 
-    @GetMapping("/email/{email}")
-    public Optional<User> getUserByEmail(@PathVariable String email) {
-        return userRepo.findByEmail(email);
-    }
-
-    @PostMapping("/add")
-    public User addUser(@RequestBody User user) {
-        return userRepo.save(user);
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<User> createUser(
+            @RequestPart("user") User user,
+            @RequestPart(value = "profilePicture", required = false) MultipartFile profilePicture) {
+        try {
+            User savedUser = userService.createUser(user, profilePicture);
+            return ResponseEntity.status(HttpStatus.CREATED).body(savedUser);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to process profile picture", e);
+        }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<User> updateUser(@PathVariable String id, @RequestBody User updatedUser) {
-        return userRepo.findById(id)
-                .map(existingUser -> {
-                    updatedUser.setId(id);
-                    updatedUser.setUpdatedAt(new Date());
-                    if (updatedUser.getCreatedAt() == null) {
-                        updatedUser.setCreatedAt(existingUser.getCreatedAt());
-                    }
-                    return ResponseEntity.ok(userRepo.save(updatedUser));
-                })
+    public ResponseEntity<User> updateUser(
+            @PathVariable String id,
+            @RequestBody User updatedUser) {
+        return userService.updateUser(id, updatedUser)
+                .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @PutMapping("/{id}/profile-picture")
+    public ResponseEntity<User> updateProfilePicture(
+            @PathVariable String id,
+            @RequestParam("file") MultipartFile file) {
+        try {
+            return userService.updateProfilePicture(id, file)
+                    .map(ResponseEntity::ok)
+                    .orElse(ResponseEntity.notFound().build());
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to update profile picture", e);
+        }
+    }
+
     @PutMapping("/{id}/{field}")
-    public ResponseEntity<User> updateFieldInUser(@PathVariable String id, @PathVariable String field, @RequestBody String value) {
-        return userRepo.findById(id)
-                .map(existingUser -> {
-                    switch (field.toLowerCase()) {
-                        case "username":
-                            existingUser.setUsername(value);
-                            break;
-                        case "email":
-                            existingUser.setEmail(value);
-                            break;
-                        case "bio":
-                            existingUser.setBio(value);
-                            break;
-                        case "profilepicurl":
-                            existingUser.setProfilePicUrl(value);
-                            break;
-                        case "password":
-                            existingUser.setPassword(value);
-                            break;
-                        default:
-                            throw new IllegalArgumentException("Invalid field: " + field);
-                    }
-                    existingUser.setUpdatedAt(new Date());
-                    return ResponseEntity.ok(userRepo.save(existingUser));
-                })
+    public ResponseEntity<User> updateField(
+            @PathVariable String id,
+            @PathVariable String field,
+            @RequestBody String value) {
+        return userService.updateField(id, field, value)
+                .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{id}")
-    public void deleteUser(@PathVariable String id) {
-        userRepo.deleteById(id);
+    public ResponseEntity<Void> deleteUser(@PathVariable String id) {
+        userService.delete(id);
+        return ResponseEntity.noContent().build();
     }
 }
