@@ -25,6 +25,11 @@ public class RoleController {
         return roleRepository.findById(id);
     }
 
+    @GetMapping("/user/{userId}")
+    public List<Role> getRolesByUserId(@PathVariable String userId) {
+        return roleRepository.findByUserId(userId);
+    }
+
     @GetMapping
     public List<Role> getAllRoles() {
         return roleRepository.findAll();

@@ -1,12 +1,21 @@
 package com.Jitter.Jitter.Backend.Controller;
 
+import com.Jitter.Jitter.Backend.DTO.LoginDTO;
+import com.Jitter.Jitter.Backend.Models.Role;
 import com.Jitter.Jitter.Backend.Models.User;
+import com.Jitter.Jitter.Backend.Repository.RoleRepository;
+import com.Jitter.Jitter.Backend.Service.RoleService;
 import com.Jitter.Jitter.Backend.Service.UserService;
+import org.springframework.security.core.Authentication;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
@@ -16,11 +25,18 @@ import java.util.List;
 @RequestMapping("/users")
 @CrossOrigin(origins = "http://localhost:3000")
 public class UserController {
+
     private final UserService userService;
+    private final RoleRepository roleRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authenticationManager;
 
     @Autowired
-    public UserController(UserService userService) {
+    public UserController(UserService userService, RoleRepository roleRepository, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager) {
         this.userService = userService;
+        this.roleRepository = roleRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.authenticationManager = authenticationManager;
     }
 
     @GetMapping
@@ -49,16 +65,32 @@ public class UserController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(path = "/register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<User> createUser(
             @RequestPart("user") User user,
             @RequestPart(value = "profilePicture", required = false) MultipartFile profilePicture) {
         try {
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
             User savedUser = userService.createUser(user, profilePicture);
+            Role role = new Role();
+            role.setType("USER");
+            role.setUserId(savedUser.getId());
+            roleRepository.save(role);
             return ResponseEntity.status(HttpStatus.CREATED).body(savedUser);
         } catch (IOException e) {
             throw new RuntimeException("Failed to process profile picture", e);
         }
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<User> login(@RequestBody LoginDTO loginDTO) {
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(loginDTO.getUsername(),
+                        loginDTO.getPassword()));
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        User user = userService.getByUsername(loginDTO.getUsername())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return ResponseEntity.ok(user);
     }
 
     @PutMapping("/{id}")
