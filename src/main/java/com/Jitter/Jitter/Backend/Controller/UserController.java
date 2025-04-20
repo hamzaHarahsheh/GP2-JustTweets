@@ -1,9 +1,11 @@
 package com.Jitter.Jitter.Backend.Controller;
 
 import com.Jitter.Jitter.Backend.DTO.LoginDTO;
+import com.Jitter.Jitter.Backend.DTO.LoginResponseDTO;
 import com.Jitter.Jitter.Backend.Models.Role;
 import com.Jitter.Jitter.Backend.Models.User;
 import com.Jitter.Jitter.Backend.Repository.RoleRepository;
+import com.Jitter.Jitter.Backend.Security.JWTGenerator;
 import com.Jitter.Jitter.Backend.Service.RoleService;
 import com.Jitter.Jitter.Backend.Service.UserService;
 import org.springframework.security.core.Authentication;
@@ -26,18 +28,16 @@ import java.util.List;
 @CrossOrigin(origins = "http://localhost:3000")
 public class UserController {
 
-    private final UserService userService;
-    private final RoleRepository roleRepository;
-    private final PasswordEncoder passwordEncoder;
-    private final AuthenticationManager authenticationManager;
-
     @Autowired
-    public UserController(UserService userService, RoleRepository roleRepository, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager) {
-        this.userService = userService;
-        this.roleRepository = roleRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.authenticationManager = authenticationManager;
-    }
+    private UserService userService;
+    @Autowired
+    private RoleRepository roleRepository;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+    @Autowired
+    private AuthenticationManager authenticationManager;
+    @Autowired
+    private JWTGenerator jwtGenerator;
 
     @GetMapping
     public List<User> getAllUsers() {
@@ -69,6 +69,22 @@ public class UserController {
     public ResponseEntity<User> createUser(
             @RequestPart("user") User user,
             @RequestPart(value = "profilePicture", required = false) MultipartFile profilePicture) {
+        if (userService.getByUsername(user.getUsername()).isPresent()) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(null);
+        }
+        if (userService.getByEmail(user.getEmail()).isPresent()) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(null);
+        }
+        if (user.getPassword() == null || user.getPassword().isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
+        if (user.getUsername() == null || user.getUsername().isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
+        if (user.getEmail() == null || user.getEmail().isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
+
         try {
             user.setPassword(passwordEncoder.encode(user.getPassword()));
             User savedUser = userService.createUser(user, profilePicture);
@@ -83,14 +99,22 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<User> login(@RequestBody LoginDTO loginDTO) {
+    public ResponseEntity<?> login(@RequestBody LoginDTO loginDTO) {
         Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginDTO.getUsername(),
+                new UsernamePasswordAuthenticationToken(
+                        loginDTO.getUsername(),
                         loginDTO.getPassword()));
         SecurityContextHolder.getContext().setAuthentication(authentication);
+        String token = jwtGenerator.generateToken(authentication);
+
         User user = userService.getByUsername(loginDTO.getUsername())
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        return ResponseEntity.ok(user);
+
+        LoginResponseDTO response = new LoginResponseDTO(token);
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                .body(response);
     }
 
     @PutMapping("/{id}")
