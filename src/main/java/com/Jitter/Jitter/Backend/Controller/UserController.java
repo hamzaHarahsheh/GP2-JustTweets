@@ -6,7 +6,6 @@ import com.Jitter.Jitter.Backend.Models.Role;
 import com.Jitter.Jitter.Backend.Models.User;
 import com.Jitter.Jitter.Backend.Repository.RoleRepository;
 import com.Jitter.Jitter.Backend.Security.JWTGenerator;
-import com.Jitter.Jitter.Backend.Service.RoleService;
 import com.Jitter.Jitter.Backend.Service.UserService;
 import org.springframework.security.core.Authentication;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,5 +1,6 @@
 package com.Jitter.Jitter.Backend.Models;
 
+import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -19,7 +20,11 @@ public class User {
     private String username;
     private String password;
     @Indexed(unique = true)
+
+    @Pattern(regexp = "^[A-Za-z]+\\d{2}@cit\\.just\\.edu\\.jo$",
+             message = "Email must be in the format username##@cit.just.edu.jo")
     private String email;
+
     private String bio;
     private Media profilePicture;
     private Date createdAt;
