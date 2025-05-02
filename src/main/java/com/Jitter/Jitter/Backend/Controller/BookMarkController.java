@@ -35,7 +35,7 @@ public class BookMarkController {
         updatedBookMark.setId(id);
         return bookMarkRepo.save(updatedBookMark);
     }
-
+    
     @DeleteMapping("/{id}")
     public void deleteBookMark(@PathVariable String id) {
         bookMarkRepo.deleteById(id);
