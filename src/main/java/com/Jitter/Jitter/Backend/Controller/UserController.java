@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.List;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @RestController
 @RequestMapping("/users")
@@ -37,6 +38,8 @@ public class UserController {
     private AuthenticationManager authenticationManager;
     @Autowired
     private JWTGenerator jwtGenerator;
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @GetMapping
     public List<User> getAllUsers() {
@@ -66,25 +69,25 @@ public class UserController {
 
     @PostMapping(path = "/register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<User> createUser(
-            @RequestPart("user") User user,
+            @RequestPart("user") String userJson,
             @RequestPart(value = "profilePicture", required = false) MultipartFile profilePicture) {
-        if (userService.getByUsername(user.getUsername()).isPresent()) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(null);
-        }
-        if (userService.getByEmail(user.getEmail()).isPresent()) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(null);
-        }
-        if (user.getPassword() == null || user.getPassword().isEmpty()) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
-        }
-        if (user.getUsername() == null || user.getUsername().isEmpty()) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
-        }
-        if (user.getEmail() == null || user.getEmail().isEmpty()) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
-        }
-
         try {
+            User user = objectMapper.readValue(userJson, User.class);
+            if (userService.getByUsername(user.getUsername()).isPresent()) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(null);
+            }
+            if (userService.getByEmail(user.getEmail()).isPresent()) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(null);
+            }
+            if (user.getPassword() == null || user.getPassword().isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+            }
+            if (user.getUsername() == null || user.getUsername().isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+            }
+            if (user.getEmail() == null || user.getEmail().isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+            }
             user.setPassword(passwordEncoder.encode(user.getPassword()));
             User savedUser = userService.createUser(user, profilePicture);
             Role role = new Role();
@@ -93,7 +96,7 @@ public class UserController {
             roleRepository.save(role);
             return ResponseEntity.status(HttpStatus.CREATED).body(savedUser);
         } catch (IOException e) {
-            throw new RuntimeException("Failed to process profile picture", e);
+            throw new RuntimeException("Failed to process profile picture or user data", e);
         }
     }
 
