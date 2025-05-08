@@ -114,21 +114,44 @@ const Sidebar: React.FC = () => {
                 </ListItem>
             </List>
 
-            <Dialog 
-                open={dialogOpen} 
+            <Dialog
+                open={dialogOpen}
                 onClose={() => setDialogOpen(false)}
                 PaperProps={{
                     sx: {
-                        backgroundColor: 'transparent',
-                        boxShadow: 'none'
+                        background: 'none !important',
+                        boxShadow: 'none !important',
+                        outline: 'none !important',
+                        minWidth: 0,
+                        minHeight: 0,
+                        overflow: 'visible',
+                    }
+                }}
+                BackdropProps={{
+                    sx: {
+                        background: 'transparent !important',
+                        backdropFilter: 'blur(6px)',
+                        WebkitBackdropFilter: 'blur(6px)',
                     }
                 }}
             >
-                <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <Box
+                    sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        p: 0,
+                        m: 0,
+                        minWidth: 0,
+                        minHeight: 0,
+                        background: 'none !important',
+                        boxShadow: 'none !important',
+                    }}
+                >
                     <Avatar
                         src={profilePicUrl}
                         alt={user?.username}
-                        sx={{ width: 300, height: 300 }}
+                        sx={{ width: 300, height: 300, boxShadow: 3 }}
                     />
                 </Box>
             </Dialog>
