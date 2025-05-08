@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User } from '../types';
+import { User, LoginResponse } from '../types';
 import { authService, userService, api } from '../services/api';
 
 interface AuthContextType {
@@ -41,13 +41,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, []);
 
     const login = async (username: string, password: string) => {
+        setLoading(true);
+        setError(null);
         try {
-            setLoading(true);
-            setError(null);
-            const response = await authService.login({ username, password });
-            localStorage.setItem('token', response.token);
+            const response: LoginResponse = await authService.login({ username, password });
+            localStorage.setItem('token', response.accessToken);
             localStorage.setItem('username', username);
-            api.defaults.headers.common['Authorization'] = `Bearer ${response.token}`;
+            api.defaults.headers.common['Authorization'] = `Bearer ${response.accessToken}`;
             const fullUser = await userService.getUserByUsername(username);
             setUser(fullUser);
             localStorage.setItem('user', JSON.stringify(fullUser));

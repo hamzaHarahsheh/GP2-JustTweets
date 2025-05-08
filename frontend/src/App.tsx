@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Box, CssBaseline } from '@mui/material';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Sidebar from './components/Sidebar';
@@ -19,40 +19,51 @@ const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => 
   return user ? <>{children}</> : <Navigate to="/login" />;
 };
 
+// New component to handle layout
+const AppLayout: React.FC = () => {
+  const location = useLocation();
+  const { user } = useAuth();
+  const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
+
+  return (
+    <Box sx={{ display: 'flex', minHeight: '100vh' }}>
+      {user && !isAuthPage && <Sidebar />}
+      <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route
+            path="/"
+            element={
+              <PrivateRoute>
+                <Timeline />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/profile/:username"
+            element={
+              <PrivateRoute>
+                <Profile />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="*"
+            element={<Typography>404 Not Found</Typography>}
+          />
+        </Routes>
+      </Box>
+    </Box>
+  );
+};
+
 const App: React.FC = () => {
   return (
     <AuthProvider>
       <Router>
         <CssBaseline />
-        <Box sx={{ display: 'flex', minHeight: '100vh' }}>
-          <Sidebar />
-          <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route
-                path="/"
-                element={
-                  <PrivateRoute>
-                    <Timeline />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/profile/:username"
-                element={
-                  <PrivateRoute>
-                    <Profile />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="*"
-                element={<Typography>404 Not Found</Typography>}
-              />
-            </Routes>
-          </Box>
-        </Box>
+        <AppLayout />
       </Router>
     </AuthProvider>
   );

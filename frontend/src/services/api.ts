@@ -8,13 +8,11 @@ const api = axios.create({
 });
 
 // Add token to requests if it exists
-api.interceptors.request.use((config: any) => {
+api.interceptors.request.use((config) => {
     const token = localStorage.getItem('token');
     if (token) {
-        config.headers = {
-            ...config.headers,
-            Authorization: `Bearer ${token}`
-        };
+        if (!config.headers) config.headers = {};
+        config.headers['Authorization'] = `Bearer ${token}`;
     }
     // Only set Content-Type for non-FormData
     if (!(config.data instanceof FormData)) {
@@ -119,6 +117,24 @@ export const userService = {
         formData.append('file', file);
         const response = await api.put<User>(`/users/${id}/profile-picture`, formData);
         return response.data;
+    },
+
+    getFollowers: async (userId: string): Promise<User[]> => {
+        const response = await api.get<User[]>(`/users/${userId}/followers`);
+        return response.data;
+    },
+
+    getFollowing: async (userId: string): Promise<User[]> => {
+        const response = await api.get<User[]>(`/users/${userId}/following`);
+        return response.data;
+    },
+
+    followUser: async (followerId: string, followingId: string): Promise<void> => {
+        await api.post('/follows', { followerId, followingId });
+    },
+
+    unfollowUser: async (followId: string): Promise<void> => {
+        await api.delete(`/follows/${followId}`);
     },
 };
 

@@ -15,6 +15,7 @@ import {
     DialogTitle,
     DialogContent,
     DialogActions,
+    Stack,
 } from '@mui/material';
 import { Edit as EditIcon } from '@mui/icons-material';
 import Post from './Post';
@@ -38,7 +39,11 @@ const Profile: React.FC = () => {
                 setBio(userData.bio || '');
                 
                 const postsData = await postService.getPostsByUserId(userData.id);
-                setPosts(postsData);
+                // Sort posts by creation date (most recent first)
+                const sortedPosts = postsData.sort((a, b) => 
+                    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+                );
+                setPosts(sortedPosts);
                 setError(null);
             } catch (err) {
                 setError('Failed to load profile');
@@ -58,9 +63,7 @@ const Profile: React.FC = () => {
             if (profilePicture) {
                 await userService.updateProfilePicture(profileUser.id, profilePicture);
             }
-            // Add other profile updates here
             setEditDialogOpen(false);
-            // Refresh profile data
             const updatedUser = await userService.getUserByUsername(username || '');
             setProfileUser(updatedUser);
         } catch (error) {
@@ -117,6 +120,16 @@ const Profile: React.FC = () => {
                             {profileUser.bio}
                         </Typography>
                     )}
+                    <Stack direction="row" spacing={4} sx={{ mt: 2 }}>
+                        <Box>
+                            <Typography variant="h6">{profileUser.followers || 0}</Typography>
+                            <Typography variant="body2" color="text.secondary">Followers</Typography>
+                        </Box>
+                        <Box>
+                            <Typography variant="h6">{profileUser.following || 0}</Typography>
+                            <Typography variant="body2" color="text.secondary">Following</Typography>
+                        </Box>
+                    </Stack>
                 </CardContent>
             </Card>
 

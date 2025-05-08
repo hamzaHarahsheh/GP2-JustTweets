@@ -42,11 +42,25 @@ const Sidebar: React.FC = () => {
     return (
         <Box sx={{ width: 250, bgcolor: 'background.paper' }}>
             <Box sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Box sx={{ cursor: profilePicUrl ? 'pointer' : 'default' }} onClick={() => profilePicUrl && setDialogOpen(true)}>
+                <Box 
+                    onClick={() => profilePicUrl && setDialogOpen(true)}
+                    sx={{ 
+                        cursor: profilePicUrl ? 'pointer' : 'default',
+                        '&:hover': {
+                            opacity: 0.8
+                        }
+                    }}
+                >
                     <Avatar
                         src={profilePicUrl}
                         alt={user?.username}
-                        sx={{ width: 40, height: 40 }}
+                        sx={{ 
+                            width: 40, 
+                            height: 40,
+                            '&:hover': {
+                                opacity: 0.8
+                            }
+                        }}
                     />
                 </Box>
                 <Box>
@@ -58,6 +72,7 @@ const Sidebar: React.FC = () => {
                     </Typography>
                 </Box>
             </Box>
+            
             <List>
                 {menuItems.map((item) => (
                     <ListItem key={item.text} disablePadding>
@@ -65,10 +80,10 @@ const Sidebar: React.FC = () => {
                             onClick={() => navigate(item.path)}
                             sx={{
                                 '&:hover': {
-                                    backgroundColor: '#e3f2fd', // light blue
-                                    color: '#1976d2', // blue text
+                                    backgroundColor: '#e3f2fd',
+                                    color: '#1976d2',
                                     '& .MuiListItemIcon-root, & .MuiListItemText-primary': {
-                                        color: '#1976d2', // blue for icon and text
+                                        color: '#1976d2',
                                     },
                                 },
                             }}
@@ -98,8 +113,17 @@ const Sidebar: React.FC = () => {
                     </ListItemButton>
                 </ListItem>
             </List>
-            {/* Dialog for full-size profile picture */}
-            <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="xs">
+
+            <Dialog 
+                open={dialogOpen} 
+                onClose={() => setDialogOpen(false)}
+                PaperProps={{
+                    sx: {
+                        backgroundColor: 'transparent',
+                        boxShadow: 'none'
+                    }
+                }}
+            >
                 <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                     <Avatar
                         src={profilePicUrl}

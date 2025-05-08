@@ -6,6 +6,8 @@ export interface User {
     profilePicture?: Media;
     createdAt: Date;
     updatedAt: Date;
+    followers?: number;
+    following?: number;
 }
 
 export interface Post {
@@ -40,6 +42,8 @@ export interface Like {
 }
 
 export interface LoginResponse {
+    accessToken: string;
+    tokenType?: string;
     token: string;
 }
 
@@ -54,4 +58,11 @@ export interface RegisterCredentials {
     password: string;
     bio?: string;
     profilePicture?: File;
+}
+
+export interface Follow {
+    id: string;
+    followerId: string;
+    followingId: string;
+    createdAt: Date;
 } 
