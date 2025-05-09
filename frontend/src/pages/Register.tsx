@@ -9,7 +9,9 @@ import {
     Button,
     Paper,
     Alert,
+    Avatar,
 } from '@mui/material';
+import { postService } from '../services/api';
 
 const Register: React.FC = () => {
     const navigate = useNavigate();

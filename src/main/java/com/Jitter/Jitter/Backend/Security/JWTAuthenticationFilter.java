@@ -35,12 +35,16 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
         String token = getJWTFromRequest(request);
         System.out.println("JWT Token received: " + token);
         if(token != null && jwtGenerator.validateToken(token)) {
+            System.out.println("JWT Token is valid");
             String username = jwtGenerator.getUsernameFromJWT(token);
+            System.out.println("Username from JWT: " + username);
             UserDetails userDetails = customeUserDetailsService.loadUserByUsername(username);
             UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
                     userDetails, null, userDetails.getAuthorities());
             authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
             SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+        } else {
+            System.out.println("JWT Token is invalid or missing");
         }
         filterChain.doFilter(request, response);
     }

@@ -1,132 +1,102 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
+import { Box, Button, TextField, Avatar } from '@mui/material';
 import { useAuth } from '../contexts/AuthContext';
 import { postService } from '../services/api';
-import { Post as PostType } from '../types';
-import {
-    Box,
-    TextField,
-    Button,
-    IconButton,
-    Avatar,
-    Stack,
-} from '@mui/material';
-import { Image as ImageIcon } from '@mui/icons-material';
 
 interface TweetBoxProps {
-    onPostCreated?: (post: PostType) => void;
+    onPostCreated: (newPost: any) => void;
 }
 
 const TweetBox: React.FC<TweetBoxProps> = ({ onPostCreated }) => {
     const { user } = useAuth();
     const [content, setContent] = useState('');
-    const [images, setImages] = useState<File[]>([]);
-    const [previewUrls, setPreviewUrls] = useState<string[]>([]);
-    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [image, setImage] = useState<File | null>(null);
+    const [loading, setLoading] = useState(false);
 
-    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files) {
-            const newImages = Array.from(e.target.files);
-            setImages([...images, ...newImages]);
-            
-            // Create preview URLs
-            const newPreviewUrls = newImages.map(file => URL.createObjectURL(file));
-            setPreviewUrls([...previewUrls, ...newPreviewUrls]);
-        }
-    };
-
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handlePost = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!content.trim() && images.length === 0) return;
-
+        if (!content.trim()) return;
+        setLoading(true);
         try {
-            await postService.createPost({ content }, images);
+            const newPost = await postService.createPost(
+                { content },
+                image ? [image] : undefined
+            );
             setContent('');
-            setImages([]);
-            setPreviewUrls([]);
-            if (onPostCreated) {
-                onPostCreated({ content } as PostType);
-            }
-        } catch (error) {
-            console.error('Failed to create post:', error);
+            setImage(null);
+            onPostCreated(newPost);
+        } finally {
+            setLoading(false);
         }
     };
 
-    const handleRemoveImage = (index: number) => {
-        const newImages = [...images];
-        const newPreviewUrls = [...previewUrls];
-        newImages.splice(index, 1);
-        newPreviewUrls.splice(index, 1);
-        setImages(newImages);
-        setPreviewUrls(newPreviewUrls);
-    };
+    const profilePicUrl = user?.profilePicture?.data
+        ? `data:${user.profilePicture.type};base64,${user.profilePicture.data}`
+        : undefined;
 
     return (
-        <Box sx={{ p: 2, borderBottom: '1px solid #e0e0e0' }}>
-            <form onSubmit={handleSubmit}>
-                <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
-                    <Avatar
-                        src={user?.profilePicture?.data}
-                        alt={user?.username}
-                    />
-                    <TextField
-                        fullWidth
-                        multiline
-                        rows={3}
-                        placeholder="What's happening?"
-                        value={content}
-                        onChange={(e) => setContent(e.target.value)}
-                        variant="outlined"
-                    />
-                </Stack>
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
-                    {previewUrls.map((url, index) => (
-                        <Box key={index} sx={{ position: 'relative' }}>
-                            <img
-                                src={url}
-                                alt={`Preview ${index + 1}`}
-                                style={{ width: 100, height: 100, objectFit: 'cover' }}
-                            />
-                            <Button
-                                size="small"
-                                onClick={() => handleRemoveImage(index)}
-                                sx={{
-                                    position: 'absolute',
-                                    top: 0,
-                                    right: 0,
-                                    minWidth: 'auto',
-                                    p: 0.5,
-                                }}
-                            >
-                                ×
-                            </Button>
-                        </Box>
-                    ))}
-                </Box>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Box
+            component="form"
+            onSubmit={handlePost}
+            sx={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: 2,
+                mb: 3,
+                p: 2,
+                bgcolor: 'background.paper',
+                borderRadius: 3,
+                boxShadow: '0 2px 8px 0 rgba(0,0,0,0.04)',
+            }}
+        >
+            <Avatar
+                src={profilePicUrl}
+                alt={user?.username}
+                sx={{
+                    width: 56,
+                    height: 56,
+                    border: (theme) => `3px solid ${theme.palette.primary.main}`,
+                    boxShadow: '0 2px 12px 0 rgba(0,0,0,0.10)',
+                    backgroundColor: (theme) => theme.palette.grey[100],
+                    pointerEvents: 'none',
+                    userSelect: 'none',
+                }}
+            />
+            <Box sx={{ flex: 1 }}>
+                <TextField
+                    fullWidth
+                    multiline
+                    minRows={2}
+                    maxRows={6}
+                    placeholder="What's happening?"
+                    value={content}
+                    onChange={(e) => setContent(e.target.value)}
+                    variant="outlined"
+                    sx={{ mb: 1 }}
+                />
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <input
                         type="file"
                         accept="image/*"
-                        multiple
-                        onChange={handleImageChange}
-                        ref={fileInputRef}
                         style={{ display: 'none' }}
+                        id="tweet-image-upload"
+                        onChange={(e) => setImage(e.target.files?.[0] || null)}
                     />
-                    <IconButton
-                        onClick={() => fileInputRef.current?.click()}
-                        color="primary"
-                    >
-                        <ImageIcon />
-                    </IconButton>
+                    <label htmlFor="tweet-image-upload">
+                        <Button component="span" variant="outlined" size="small">
+                            Add Image
+                        </Button>
+                    </label>
                     <Button
-                        variant="contained"
-                        color="primary"
                         type="submit"
-                        disabled={!content.trim() && images.length === 0}
+                        variant="contained"
+                        disabled={loading || !content.trim()}
+                        sx={{ ml: 'auto', borderRadius: 3, textTransform: 'none' }}
                     >
-                        Tweet
+                        {loading ? 'Posting...' : 'Tweet'}
                     </Button>
                 </Box>
-            </form>
+            </Box>
         </Box>
     );
 };

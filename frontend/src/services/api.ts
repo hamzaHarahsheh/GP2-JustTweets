@@ -138,4 +138,4 @@ export const userService = {
     },
 };
 
-export { api }; 
+export default api; 

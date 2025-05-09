@@ -28,7 +28,7 @@ const Timeline: React.FC = () => {
     }, []);
 
     const handleNewPost = (newPost: PostType) => {
-        setPosts([newPost, ...posts]);
+        setPosts((prev) => [newPost, ...prev]);
     };
 
     if (loading) {

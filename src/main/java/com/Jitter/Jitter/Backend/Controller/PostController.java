@@ -3,6 +3,7 @@ package com.Jitter.Jitter.Backend.Controller;
 import com.Jitter.Jitter.Backend.Models.Media;
 import com.Jitter.Jitter.Backend.Models.Post;
 import com.Jitter.Jitter.Backend.Service.PostService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,9 +47,13 @@ public class PostController {
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Post> createPost(
-            @RequestPart("post") Post post,
-            @RequestPart(value = "images", required = false) List<MultipartFile> images) {
+            @RequestPart("post") String postJson,
+            @RequestPart(value = "images", required = false) List<MultipartFile> images,
+            Principal principal) {
         try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            Post post = objectMapper.readValue(postJson, Post.class);
+            post.setUserId(principal.getName());
             Post savedPost = postService.createPost(post, images);
             return ResponseEntity.status(HttpStatus.CREATED).body(savedPost);
         } catch (IOException e) {
