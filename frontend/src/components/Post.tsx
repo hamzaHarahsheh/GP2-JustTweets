@@ -25,6 +25,7 @@ import {
     ChatBubbleOutline as ChatIcon,
     Share as ShareIcon,
 } from '@mui/icons-material';
+import CircularProgress from '@mui/material/CircularProgress';
 
 interface PostProps {
     post: PostType;
@@ -39,6 +40,9 @@ const Post: React.FC<PostProps> = ({ post }) => {
     const [isLiked, setIsLiked] = useState(false);
     const [commentDialogOpen, setCommentDialogOpen] = useState(false);
     const [newComment, setNewComment] = useState('');
+    const [likesDialogOpen, setLikesDialogOpen] = useState(false);
+    const [likeUsers, setLikeUsers] = useState<User[]>([]);
+    const [loadingLikes, setLoadingLikes] = useState(false);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -99,6 +103,31 @@ const Post: React.FC<PostProps> = ({ post }) => {
         }
     };
 
+    const handleOpenLikesDialog = async () => {
+        setLikesDialogOpen(true);
+        setLoadingLikes(true);
+        try {
+            // Fetch user details for each like
+            const users = await Promise.all(
+                likes.map(async (like) => {
+                    try {
+                        return await userService.getUserById(like.userId);
+                    } catch {
+                        return null;
+                    }
+                })
+            );
+            setLikeUsers(users.filter(Boolean) as User[]);
+        } finally {
+            setLoadingLikes(false);
+        }
+    };
+
+    const handleCloseLikesDialog = () => {
+        setLikesDialogOpen(false);
+        setLikeUsers([]);
+    };
+
     const profilePicUrl = postUser?.profilePicture?.data
         ? `data:${postUser.profilePicture.type};base64,${postUser.profilePicture.data}`
         : undefined;
@@ -147,7 +176,12 @@ const Post: React.FC<PostProps> = ({ post }) => {
                     <IconButton onClick={handleLike} color={isLiked ? 'error' : 'default'}>
                         {isLiked ? <FavoriteIcon /> : <FavoriteBorderIcon />}
                     </IconButton>
-                    <Typography>{likes.length}</Typography>
+                    <Typography
+                        sx={{ cursor: 'pointer', fontWeight: 500 }}
+                        onClick={handleOpenLikesDialog}
+                    >
+                        {likes.length}
+                    </Typography>
                     <IconButton onClick={() => setCommentDialogOpen(true)}>
                         <ChatIcon />
                     </IconButton>
@@ -205,6 +239,40 @@ const Post: React.FC<PostProps> = ({ post }) => {
                     <Button onClick={handleAddComment} variant="contained">
                         Comment
                     </Button>
+                </DialogActions>
+            </Dialog>
+
+            <Dialog open={likesDialogOpen} onClose={handleCloseLikesDialog}>
+                <DialogTitle>Liked by</DialogTitle>
+                <DialogContent>
+                    {loadingLikes ? (
+                        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 80 }}>
+                            <CircularProgress />
+                        </Box>
+                    ) : (
+                        <Box>
+                            {likeUsers.length === 0 && (
+                                <Typography variant="body2" color="text.secondary">No likes yet.</Typography>
+                            )}
+                            {likeUsers.map((likeUser) => (
+                                <Box key={likeUser.id} sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                                    <Avatar
+                                        src={likeUser.profilePicture?.data
+                                            ? `data:${likeUser.profilePicture.type};base64,${likeUser.profilePicture.data}`
+                                            : undefined}
+                                        alt={likeUser.username}
+                                        sx={{ width: 32, height: 32, bgcolor: likeUser.profilePicture ? 'transparent' : 'grey.400' }}
+                                    />
+                                    <Typography variant="body2" fontWeight="bold">
+                                        {likeUser.username}
+                                    </Typography>
+                                </Box>
+                            ))}
+                        </Box>
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCloseLikesDialog}>Close</Button>
                 </DialogActions>
             </Dialog>
         </Card>
