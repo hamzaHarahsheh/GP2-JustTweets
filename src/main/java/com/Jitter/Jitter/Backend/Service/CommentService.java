@@ -1,7 +1,7 @@
 package com.Jitter.Jitter.Backend.Service;
 
 import com.Jitter.Jitter.Backend.Models.Comment;
-import com.Jitter.Jitter.Backend.Models.CommentDTO;
+import com.Jitter.Jitter.Backend.DTO.CommentDTO;
 import com.Jitter.Jitter.Backend.Models.User;
 import com.Jitter.Jitter.Backend.Repository.CommentRepository;
 import com.Jitter.Jitter.Backend.Repository.UserRepository;

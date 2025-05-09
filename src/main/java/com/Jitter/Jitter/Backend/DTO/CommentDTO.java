@@ -1,4 +1,4 @@
-package com.Jitter.Jitter.Backend.Models;
+package com.Jitter.Jitter.Backend.DTO;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

@@ -109,7 +109,6 @@ const Post: React.FC<PostProps> = ({ post }) => {
         setLikesDialogOpen(true);
         setLoadingLikes(true);
         try {
-            // Fetch user details for each like
             const users = await Promise.all(
                 likes.map(async (like) => {
                     try {
