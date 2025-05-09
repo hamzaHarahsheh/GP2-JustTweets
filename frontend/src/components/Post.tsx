@@ -36,6 +36,7 @@ const Post: React.FC<PostProps> = ({ post }) => {
     const [postUser, setPostUser] = useState<User | null>(null);
     const [likes, setLikes] = useState<Like[]>([]);
     const [comments, setComments] = useState<Comment[]>([]);
+    const [commentUsers, setCommentUsers] = useState<{ [key: string]: User }>({});
     const [isLiked, setIsLiked] = useState(false);
     const [commentDialogOpen, setCommentDialogOpen] = useState(false);
     const [newComment, setNewComment] = useState('');
@@ -52,6 +53,15 @@ const Post: React.FC<PostProps> = ({ post }) => {
                 
                 const commentsData = await commentService.getCommentsByPostId(post.id);
                 setComments(commentsData);
+
+                // Fetch users for comments
+                const usersMap: { [key: string]: User } = {};
+                await Promise.all(commentsData.map(async (comment) => {
+                    if (!usersMap[comment.userId]) {
+                        usersMap[comment.userId] = await userService.getUserById(comment.userId);
+                    }
+                }));
+                setCommentUsers(usersMap);
             } catch (error) {
                 console.error('Failed to fetch post data:', error);
             }
@@ -99,12 +109,16 @@ const Post: React.FC<PostProps> = ({ post }) => {
         }
     };
 
+    const profilePicUrl = postUser?.profilePicture?.data
+        ? `data:${postUser.profilePicture.type};base64,${postUser.profilePicture.data}`
+        : undefined;
+
     return (
         <Card sx={{ mb: 2 }}>
             <CardContent>
                 <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
                     <Avatar
-                        src={postUser?.profilePicture?.data}
+                        src={profilePicUrl}
                         alt={postUser?.username}
                         onClick={() => navigate(`/profile/${postUser?.username}`)}
                         sx={{ cursor: 'pointer' }}
@@ -152,6 +166,21 @@ const Post: React.FC<PostProps> = ({ post }) => {
                         <ShareIcon />
                     </IconButton>
                 </Stack>
+                <Box sx={{ mt: 2 }}>
+                    {comments.map((comment) => (
+                        <Box key={comment.id} sx={{ mb: 1, pl: 2, borderLeft: '2px solid #eee', display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Avatar
+                                src={comment.profilePictureUrl}
+                                alt={comment.username}
+                                sx={{ width: 32, height: 32 }}
+                            />
+                            <Typography variant="body2" fontWeight="bold">
+                                {comment.username}
+                            </Typography>
+                            <Typography variant="body2">{comment.content}</Typography>
+                        </Box>
+                    ))}
+                </Box>
             </CardContent>
 
             <Dialog open={commentDialogOpen} onClose={() => setCommentDialogOpen(false)}>
@@ -160,7 +189,9 @@ const Post: React.FC<PostProps> = ({ post }) => {
                     <Box sx={{ mb: 2 }}>
                         {comments.map((comment) => (
                             <Box key={comment.id} sx={{ mb: 2 }}>
-                                <Typography variant="subtitle2">{comment.userId}</Typography>
+                                <Typography variant="subtitle2">
+                                    {commentUsers[comment.userId]?.username || comment.userId}
+                                </Typography>
                                 <Typography variant="body1">{comment.content}</Typography>
                             </Box>
                         ))}

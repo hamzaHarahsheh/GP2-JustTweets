@@ -1,10 +1,15 @@
 package com.Jitter.Jitter.Backend.Controller;
 
 import com.Jitter.Jitter.Backend.Models.Comment;
+import com.Jitter.Jitter.Backend.Models.CommentDTO;
 import com.Jitter.Jitter.Backend.Repository.CommentRepository;
+import com.Jitter.Jitter.Backend.Service.CommentService;
+import com.Jitter.Jitter.Backend.Service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -15,8 +20,20 @@ public class CommentController {
     @Autowired
     private CommentRepository commentRepo;
 
+    @Autowired
+    private CommentService commentService;
+
+    @Autowired
+    private UserService userService;
+
     @PostMapping("/add")
-    public Comment addComment(@RequestBody Comment comment) {
+    public Comment addComment(@RequestBody Comment comment, Principal principal) {
+        String username = principal.getName();
+        String userId = userService.getByUsername(username)
+                .map(u -> u.getId())
+                .orElseThrow(() -> new RuntimeException("User not found for username: " + username));
+        comment.setUserId(userId);
+        comment.setCreatedAt(new Date());
         return commentRepo.save(comment);
     }
 
@@ -31,8 +48,8 @@ public class CommentController {
     }
 
     @GetMapping("/post/{postId}")
-    public List<Comment> getCommentsByPostId(@PathVariable String postId) {
-        return commentRepo.findByPostId(postId);
+    public List<CommentDTO> getCommentsByPostId(@PathVariable String postId) {
+        return commentService.getEnrichedByPostId(postId);
     }
 
     @GetMapping("/user/{userId}")

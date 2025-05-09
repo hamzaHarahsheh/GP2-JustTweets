@@ -3,6 +3,7 @@ package com.Jitter.Jitter.Backend.Controller;
 import com.Jitter.Jitter.Backend.Models.Media;
 import com.Jitter.Jitter.Backend.Models.Post;
 import com.Jitter.Jitter.Backend.Service.PostService;
+import com.Jitter.Jitter.Backend.Service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -22,10 +23,12 @@ import java.util.List;
 @CrossOrigin(origins = "http://localhost:3000")
 public class PostController {
     private final PostService postService;
+    private final UserService userService;
 
     @Autowired
-    public PostController(PostService postService) {
+    public PostController(PostService postService, UserService userService) {
         this.postService = postService;
+        this.userService = userService;
     }
 
     @GetMapping
@@ -53,7 +56,11 @@ public class PostController {
         try {
             ObjectMapper objectMapper = new ObjectMapper();
             Post post = objectMapper.readValue(postJson, Post.class);
-            post.setUserId(principal.getName());
+            String username = principal.getName();
+            String userId = userService.getByUsername(username)
+                    .map(u -> u.getId())
+                    .orElseThrow(() -> new RuntimeException("User not found for username: " + username));
+            post.setUserId(userId);
             Post savedPost = postService.createPost(post, images);
             return ResponseEntity.status(HttpStatus.CREATED).body(savedPost);
         } catch (IOException e) {
