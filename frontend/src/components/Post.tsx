@@ -196,7 +196,8 @@ const Post: React.FC<PostProps> = ({ post }) => {
                             <Avatar
                                 src={comment.profilePictureUrl ? `http://localhost:8081${comment.profilePictureUrl}` : undefined}
                                 alt={comment.username}
-                                sx={{ width: 32, height: 32, bgcolor: comment.profilePictureUrl ? 'transparent' : 'grey.400' }}
+                                sx={{ width: 32, height: 32, bgcolor: comment.profilePictureUrl ? 'transparent' : 'grey.400', cursor: 'pointer' }}
+                                onClick={() => navigate(`/profile/${comment.username}`)}
                             />
                             <Typography variant="body2" fontWeight="bold">
                                 {comment.username}
@@ -216,7 +217,8 @@ const Post: React.FC<PostProps> = ({ post }) => {
                                 <Avatar
                                     src={comment.profilePictureUrl ? `http://localhost:8081${comment.profilePictureUrl}` : undefined}
                                     alt={comment.username}
-                                    sx={{ width: 32, height: 32, bgcolor: comment.profilePictureUrl ? 'transparent' : 'grey.400' }}
+                                    sx={{ width: 32, height: 32, bgcolor: comment.profilePictureUrl ? 'transparent' : 'grey.400', cursor: 'pointer' }}
+                                    onClick={() => navigate(`/profile/${comment.username}`)}
                                 />
                                 <Typography variant="subtitle2" fontWeight="bold">
                                     {comment.username}
@@ -261,7 +263,8 @@ const Post: React.FC<PostProps> = ({ post }) => {
                                             ? `data:${likeUser.profilePicture.type};base64,${likeUser.profilePicture.data}`
                                             : undefined}
                                         alt={likeUser.username}
-                                        sx={{ width: 32, height: 32, bgcolor: likeUser.profilePicture ? 'transparent' : 'grey.400' }}
+                                        sx={{ width: 32, height: 32, bgcolor: likeUser.profilePicture ? 'transparent' : 'grey.400', cursor: 'pointer' }}
+                                        onClick={() => navigate(`/profile/${likeUser.username}`)}
                                     />
                                     <Typography variant="body2" fontWeight="bold">
                                         {likeUser.username}
