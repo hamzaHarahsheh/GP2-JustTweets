@@ -28,7 +28,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                         setUser(user);
                         setLoading(false);
                     })
-                    .catch(err => {
+                    .catch(() => {
                         setError('Failed to load user data');
                         setLoading(false);
                     });
@@ -45,9 +45,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setError(null);
         try {
             const response: LoginResponse = await authService.login({ username, password });
-            localStorage.setItem('token', response.accessToken);
+            localStorage.setItem('token', response.accessToken || response.token);
             localStorage.setItem('username', username);
-            api.defaults.headers.common['Authorization'] = `Bearer ${response.accessToken}`;
+            api.defaults.headers.common['Authorization'] = `Bearer ${response.accessToken || response.token}`;
             const fullUser = await userService.getUserByUsername(username);
             setUser(fullUser);
             localStorage.setItem('user', JSON.stringify(fullUser));
@@ -78,6 +78,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const logout = () => {
         localStorage.removeItem('token');
         localStorage.removeItem('username');
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('jwt');
         setUser(null);
     };
 

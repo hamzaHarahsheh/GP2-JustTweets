@@ -30,6 +30,11 @@ public class LikeController {
         return likeRepo.findAll();
     }
 
+    @GetMapping("/post/{postId}")
+    public List<Like> getLikesByPostId(@PathVariable String postId) {
+        return likeRepo.findByPostId(postId);
+    }
+
     @PutMapping("/{id}")
     public Like updateLike(@PathVariable String id, @RequestBody Like updatedLike) {
         updatedLike.setId(id);

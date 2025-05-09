@@ -2,6 +2,7 @@ package com.Jitter.Jitter.Backend.Controller;
 
 import com.Jitter.Jitter.Backend.Models.Comment;
 import com.Jitter.Jitter.Backend.Models.CommentDTO;
+import com.Jitter.Jitter.Backend.Models.User;
 import com.Jitter.Jitter.Backend.Repository.CommentRepository;
 import com.Jitter.Jitter.Backend.Service.CommentService;
 import com.Jitter.Jitter.Backend.Service.UserService;
@@ -27,14 +28,25 @@ public class CommentController {
     private UserService userService;
 
     @PostMapping("/add")
-    public Comment addComment(@RequestBody Comment comment, Principal principal) {
+    public CommentDTO addComment(@RequestBody Comment comment, Principal principal) {
         String username = principal.getName();
-        String userId = userService.getByUsername(username)
-                .map(u -> u.getId())
+        User user = userService.getByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found for username: " + username));
-        comment.setUserId(userId);
+        comment.setUserId(user.getId());
         comment.setCreatedAt(new Date());
-        return commentRepo.save(comment);
+        Comment saved = commentRepo.save(comment);
+        String profilePictureUrl = user.getProfilePicture() != null && user.getProfilePicture().getData() != null
+                ? "/users/" + user.getId() + "/profile-picture"
+                : null;
+        return new CommentDTO(
+            saved.getId(),
+            saved.getPostId(),
+            saved.getUserId(),
+            user.getUsername(),
+            profilePictureUrl,
+            saved.getContent(),
+            saved.getCreatedAt()
+        );
     }
 
     @GetMapping("/{id}")

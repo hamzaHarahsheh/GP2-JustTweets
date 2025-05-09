@@ -27,25 +27,24 @@ public class CommentService {
 
     public List<CommentDTO> getEnrichedByPostId(String postId) {
         List<Comment> comments = commentRepository.findByPostId(postId);
-        List<CommentDTO> dtos = new ArrayList<>();
+        List<CommentDTO> enriched = new ArrayList<>();
         for (Comment comment : comments) {
-            User user = userRepository.findById(comment.getUserId()).orElse(null);
-            String username = user != null ? user.getUsername() : "Unknown";
-            String profilePictureUrl = null;
-            if (user != null && user.getProfilePicture() != null && user.getProfilePicture().getData() != null) {
-                profilePictureUrl = "/users/" + user.getId() + "/profile-picture";
-            }
-            dtos.add(new CommentDTO(
-                comment.getId(),
-                comment.getPostId(),
-                comment.getUserId(),
-                username,
-                profilePictureUrl,
-                comment.getContent(),
-                comment.getCreatedAt()
+            Optional<User> userOpt = userRepository.findById(comment.getUserId());
+            String username = userOpt.map(User::getUsername).orElse("Unknown");
+            String profilePictureUrl = userOpt.isPresent() && userOpt.get().getProfilePicture() != null && userOpt.get().getProfilePicture().getData() != null
+                    ? "/users/" + userOpt.get().getId() + "/profile-picture"
+                    : null;
+            enriched.add(new CommentDTO(
+                    comment.getId(),
+                    comment.getPostId(),
+                    comment.getUserId(),
+                    username,
+                    profilePictureUrl,
+                    comment.getContent(),
+                    comment.getCreatedAt()
             ));
         }
-        return dtos;
+        return enriched;
     }
 
     public List<Comment> getByUserId(String userId) {

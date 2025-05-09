@@ -36,7 +36,6 @@ const Post: React.FC<PostProps> = ({ post }) => {
     const [postUser, setPostUser] = useState<User | null>(null);
     const [likes, setLikes] = useState<Like[]>([]);
     const [comments, setComments] = useState<Comment[]>([]);
-    const [commentUsers, setCommentUsers] = useState<{ [key: string]: User }>({});
     const [isLiked, setIsLiked] = useState(false);
     const [commentDialogOpen, setCommentDialogOpen] = useState(false);
     const [newComment, setNewComment] = useState('');
@@ -46,22 +45,13 @@ const Post: React.FC<PostProps> = ({ post }) => {
             try {
                 const userData = await userService.getUserById(post.userId);
                 setPostUser(userData);
-                
+
                 const likesData = await likeService.getLikesByPostId(post.id);
                 setLikes(likesData);
                 setIsLiked(likesData.some(like => like.userId === user?.id));
-                
+
                 const commentsData = await commentService.getCommentsByPostId(post.id);
                 setComments(commentsData);
-
-                // Fetch users for comments
-                const usersMap: { [key: string]: User } = {};
-                await Promise.all(commentsData.map(async (comment) => {
-                    if (!usersMap[comment.userId]) {
-                        usersMap[comment.userId] = await userService.getUserById(comment.userId);
-                    }
-                }));
-                setCommentUsers(usersMap);
             } catch (error) {
                 console.error('Failed to fetch post data:', error);
             }
@@ -170,9 +160,9 @@ const Post: React.FC<PostProps> = ({ post }) => {
                     {comments.map((comment) => (
                         <Box key={comment.id} sx={{ mb: 1, pl: 2, borderLeft: '2px solid #eee', display: 'flex', alignItems: 'center', gap: 1 }}>
                             <Avatar
-                                src={comment.profilePictureUrl}
+                                src={comment.profilePictureUrl ? `http://localhost:8081${comment.profilePictureUrl}` : undefined}
                                 alt={comment.username}
-                                sx={{ width: 32, height: 32 }}
+                                sx={{ width: 32, height: 32, bgcolor: comment.profilePictureUrl ? 'transparent' : 'grey.400' }}
                             />
                             <Typography variant="body2" fontWeight="bold">
                                 {comment.username}
@@ -188,9 +178,14 @@ const Post: React.FC<PostProps> = ({ post }) => {
                 <DialogContent>
                     <Box sx={{ mb: 2 }}>
                         {comments.map((comment) => (
-                            <Box key={comment.id} sx={{ mb: 2 }}>
-                                <Typography variant="subtitle2">
-                                    {commentUsers[comment.userId]?.username || comment.userId}
+                            <Box key={comment.id} sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Avatar
+                                    src={comment.profilePictureUrl ? `http://localhost:8081${comment.profilePictureUrl}` : undefined}
+                                    alt={comment.username}
+                                    sx={{ width: 32, height: 32, bgcolor: comment.profilePictureUrl ? 'transparent' : 'grey.400' }}
+                                />
+                                <Typography variant="subtitle2" fontWeight="bold">
+                                    {comment.username}
                                 </Typography>
                                 <Typography variant="body1">{comment.content}</Typography>
                             </Box>
