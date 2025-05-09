@@ -3,6 +3,8 @@ package com.Jitter.Jitter.Backend.Service;
 import com.Jitter.Jitter.Backend.Models.Media;
 import com.Jitter.Jitter.Backend.Models.User;
 import com.Jitter.Jitter.Backend.Repository.UserRepository;
+import com.Jitter.Jitter.Backend.Service.FollowService;
+import com.Jitter.Jitter.Backend.Models.Follow;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -10,14 +12,17 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.util.StringUtils;
 
 @Service
 public class UserService {
     private final UserRepository userRepository;
+    private final FollowService followService;
 
     @Autowired
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, FollowService followService) {
         this.userRepository = userRepository;
+        this.followService = followService;
     }
 
     public List<User> getAll() {
@@ -111,5 +116,52 @@ public class UserService {
 
     public void delete(String id) {
         userRepository.deleteById(id);
+    }
+
+    public List<User> getFollowing(String userId) {
+        List<Follow> following = followService.getFollowing(userId);
+        return following.stream()
+            .map(f -> userRepository.findById(f.getFollowingId()))
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .toList();
+    }
+
+    public List<User> searchByUsernameOrEmail(String query) {
+        if (!StringUtils.hasText(query)) {
+            return List.of();
+        }
+        return userRepository.findAll().stream()
+            .filter(user -> user.getUsername() != null && user.getUsername().toLowerCase().contains(query.toLowerCase())
+                || user.getEmail() != null && user.getEmail().toLowerCase().contains(query.toLowerCase()))
+            .toList();
+    }
+
+    public boolean followUser(String followerId, String followingId) {
+        // Prevent self-follow
+        if (followerId.equals(followingId)) return false;
+        // Check if already following
+        List<Follow> existing = followService.getFollowing(followerId);
+        boolean alreadyFollowing = existing.stream().anyMatch(f -> f.getFollowingId().equals(followingId));
+        if (alreadyFollowing) return false;
+        Follow follow = new Follow();
+        follow.setFollowerId(followerId);
+        follow.setFollowingId(followingId);
+        followService.save(follow);
+        return true;
+    }
+
+    public boolean unfollowUser(String followerId, String followingId) {
+        if (followerId.equals(followingId)) return false;
+        return followService.deleteByFollowerAndFollowing(followerId, followingId);
+    }
+
+    public List<User> getFollowers(String userId) {
+        List<Follow> followers = followService.getFollowers(userId);
+        return followers.stream()
+            .map(f -> userRepository.findById(f.getFollowerId()))
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .toList();
     }
 }

@@ -36,4 +36,13 @@ public class FollowService {
     public void delete(String id) {
         followRepository.deleteById(id);
     }
+
+    public boolean deleteByFollowerAndFollowing(String followerId, String followingId) {
+        Optional<Follow> relation = followRepository.findByFollowerIdAndFollowingId(followerId, followingId);
+        if (relation.isPresent()) {
+            followRepository.deleteById(relation.get().getId());
+            return true;
+        }
+        return false;
+    }
 }

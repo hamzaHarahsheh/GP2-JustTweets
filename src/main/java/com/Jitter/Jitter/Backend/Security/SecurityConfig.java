@@ -48,6 +48,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/users/username/**", "/users/email/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/users/*/profile-picture").permitAll()
                         .requestMatchers(HttpMethod.GET, "/posts/*/image/*").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/users/search").authenticated()
                         .anyRequest().authenticated()
                 )
                 .httpBasic(Customizer.withDefaults())

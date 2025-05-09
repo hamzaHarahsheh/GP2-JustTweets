@@ -129,12 +129,19 @@ export const userService = {
         return response.data;
     },
 
-    followUser: async (followerId: string, followingId: string): Promise<void> => {
-        await api.post('/follows', { followerId, followingId });
+    searchUsers: async (query: string): Promise<User[]> => {
+        const response = await api.get<User[]>(`/users/search?q=${encodeURIComponent(query)}`);
+        return response.data;
     },
 
-    unfollowUser: async (followId: string): Promise<void> => {
-        await api.delete(`/follows/${followId}`);
+    followUser: async (userId: string) => {
+        const response = await api.post(`/users/follow/${userId}`);
+        return response.data;
+    },
+
+    unfollowUser: async (userId: string) => {
+        const response = await api.post(`/users/unfollow/${userId}`);
+        return response.data;
     },
 };
 

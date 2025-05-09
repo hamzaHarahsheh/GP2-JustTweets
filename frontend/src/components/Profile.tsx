@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { userService, postService } from '../services/api';
 import { User, Post as PostType } from '../types';
@@ -23,7 +23,7 @@ import Post from './Post';
 
 const Profile: React.FC = () => {
     const { username } = useParams<{ username: string }>();
-    const { user: currentUser } = useAuth();
+    const { user: currentUser, setUser } = useAuth();
     const [profileUser, setProfileUser] = useState<User | null>(null);
     const [posts, setPosts] = useState<PostType[]>([]);
     const [loading, setLoading] = useState(true);
@@ -32,8 +32,15 @@ const Profile: React.FC = () => {
     const [bio, setBio] = useState('');
     const [profilePicture, setProfilePicture] = useState<File | null>(null);
     const [pictureDialogOpen, setPictureDialogOpen] = useState(false);
+    const [isFollowing, setIsFollowing] = useState(false);
+    const [followLoading, setFollowLoading] = useState(false);
+    const [followersDialogOpen, setFollowersDialogOpen] = useState(false);
+    const [followingDialogOpen, setFollowingDialogOpen] = useState(false);
+    const [followersList, setFollowersList] = useState<User[]>([]);
+    const [followingList, setFollowingList] = useState<User[]>([]);
 
     const theme = useTheme();
+    const navigate = useNavigate();
 
     useEffect(() => {
         const fetchData = async () => {
@@ -44,6 +51,11 @@ const Profile: React.FC = () => {
                 const postsData = await postService.getPostsByUserId(userData.id);
                 setPosts(postsData.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
                 setError(null);
+                // Check if current user is following this profile
+                if (currentUser && userData.id !== currentUser.id) {
+                    const following = await userService.getFollowing(currentUser.id);
+                    setIsFollowing(following.some(u => u.id === userData.id));
+                }
             } catch (err) {
                 setError('Failed to load profile');
             } finally {
@@ -51,7 +63,7 @@ const Profile: React.FC = () => {
             }
         };
         fetchData();
-    }, [username]);
+    }, [username, currentUser]);
 
     const handleEditProfile = async () => {
         if (!profileUser) return;
@@ -65,6 +77,50 @@ const Profile: React.FC = () => {
         } catch (error) {
             // handle error
         }
+    };
+
+    const handleFollow = async () => {
+        if (!profileUser) return;
+        setFollowLoading(true);
+        try {
+            if (isFollowing) {
+                await userService.unfollowUser(profileUser.id);
+                setIsFollowing(false);
+            } else {
+                await userService.followUser(profileUser.id);
+                setIsFollowing(true);
+            }
+            // Always fetch the latest user data after follow/unfollow
+            const updatedUser = await userService.getUserByUsername(username || '');
+            setProfileUser(updatedUser);
+            // If current user, also update their state
+            if (currentUser && currentUser.id === updatedUser.id) {
+                setUser(updatedUser);
+            }
+        } catch (err) {
+            // handle error
+        } finally {
+            setFollowLoading(false);
+        }
+    };
+
+    const handleOpenFollowers = async () => {
+        if (!profileUser) return;
+        const users = await userService.getFollowers(profileUser.id);
+        setFollowersList(users);
+        setFollowersDialogOpen(true);
+    };
+
+    const handleOpenFollowing = async () => {
+        if (!profileUser) return;
+        const users = await userService.getFollowing(profileUser.id);
+        setFollowingList(users);
+        setFollowingDialogOpen(true);
+    };
+
+    const handleNavigateToProfile = (username: string, closeDialog: () => void) => {
+        closeDialog();
+        navigate(`/profile/${username}`);
     };
 
     if (loading) {
@@ -133,13 +189,13 @@ const Profile: React.FC = () => {
                         </Typography>
                     )}
                     <Stack direction="row" spacing={4} sx={{ mt: 2 }}>
-                        <Box>
+                        <Box sx={{ cursor: 'pointer' }} onClick={handleOpenFollowers}>
                             <Typography variant="subtitle1" fontWeight={600} align="center">
                                 {profileUser.followers ?? 0}
                             </Typography>
                             <Typography variant="caption" color="text.secondary">Followers</Typography>
                         </Box>
-                        <Box>
+                        <Box sx={{ cursor: 'pointer' }} onClick={handleOpenFollowing}>
                             <Typography variant="subtitle1" fontWeight={600} align="center">
                                 {profileUser.following ?? 0}
                             </Typography>
@@ -147,7 +203,7 @@ const Profile: React.FC = () => {
                         </Box>
                     </Stack>
                 </Box>
-                {isCurrentUser && (
+                {isCurrentUser ? (
                     <Button
                         variant="outlined"
                         startIcon={<EditIcon />}
@@ -155,6 +211,16 @@ const Profile: React.FC = () => {
                         onClick={() => setEditDialogOpen(true)}
                     >
                         Edit
+                    </Button>
+                ) : (
+                    <Button
+                        variant={isFollowing ? 'contained' : 'outlined'}
+                        color={isFollowing ? 'primary' : 'inherit'}
+                        sx={{ ml: 'auto', borderRadius: 3, textTransform: 'none' }}
+                        onClick={handleFollow}
+                        disabled={followLoading}
+                    >
+                        {isFollowing ? 'Following' : 'Follow'}
                     </Button>
                 )}
             </Box>
@@ -238,6 +304,66 @@ const Profile: React.FC = () => {
                         sx={{ width: 300, height: 300, boxShadow: 3 }}
                     />
                 </Box>
+            </Dialog>
+
+            {/* Followers Dialog */}
+            <Dialog open={followersDialogOpen} onClose={() => setFollowersDialogOpen(false)}>
+                <DialogTitle>Followers</DialogTitle>
+                <DialogContent>
+                    {followersList.length === 0 ? (
+                        <Typography>No followers yet.</Typography>
+                    ) : (
+                        followersList.map(u => (
+                            <Box key={u.id} sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
+                                <Avatar
+                                    src={u.profilePicture?.data ? `data:${u.profilePicture.type};base64,${u.profilePicture.data}` : undefined}
+                                    sx={{ cursor: 'pointer' }}
+                                    onClick={() => handleNavigateToProfile(u.username, () => setFollowersDialogOpen(false))}
+                                />
+                                <Typography
+                                    fontWeight={500}
+                                    sx={{ cursor: 'pointer', textDecoration: 'underline' }}
+                                    onClick={() => handleNavigateToProfile(u.username, () => setFollowersDialogOpen(false))}
+                                >
+                                    {u.username}
+                                </Typography>
+                            </Box>
+                        ))
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setFollowersDialogOpen(false)}>Close</Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Following Dialog */}
+            <Dialog open={followingDialogOpen} onClose={() => setFollowingDialogOpen(false)}>
+                <DialogTitle>Following</DialogTitle>
+                <DialogContent>
+                    {followingList.length === 0 ? (
+                        <Typography>Not following anyone yet.</Typography>
+                    ) : (
+                        followingList.map(u => (
+                            <Box key={u.id} sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
+                                <Avatar
+                                    src={u.profilePicture?.data ? `data:${u.profilePicture.type};base64,${u.profilePicture.data}` : undefined}
+                                    sx={{ cursor: 'pointer' }}
+                                    onClick={() => handleNavigateToProfile(u.username, () => setFollowingDialogOpen(false))}
+                                />
+                                <Typography
+                                    fontWeight={500}
+                                    sx={{ cursor: 'pointer', textDecoration: 'underline' }}
+                                    onClick={() => handleNavigateToProfile(u.username, () => setFollowingDialogOpen(false))}
+                                >
+                                    {u.username}
+                                </Typography>
+                            </Box>
+                        ))
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setFollowingDialogOpen(false)}>Close</Button>
+                </DialogActions>
             </Dialog>
         </Box>
     );

@@ -5,6 +5,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Sidebar from './components/Sidebar';
 import Timeline from './components/Timeline';
 import Profile from './components/Profile';
+import Explore from './components/Explore';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import { Typography } from '@mui/material';
@@ -46,6 +47,14 @@ const AppLayout: React.FC = () => {
             element={
               <PrivateRoute>
                 <Timeline />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/explore"
+            element={
+              <PrivateRoute>
+                <Explore />
               </PrivateRoute>
             }
           />

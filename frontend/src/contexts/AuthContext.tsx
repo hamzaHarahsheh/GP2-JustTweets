@@ -9,6 +9,7 @@ interface AuthContextType {
     login: (username: string, password: string) => Promise<void>;
     register: (username: string, email: string, password: string, bio?: string, profilePicture?: File) => Promise<void>;
     logout: () => void;
+    setUser: React.Dispatch<React.SetStateAction<User | null>>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -63,10 +64,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
             setLoading(true);
             setError(null);
-            const user = await authService.register({ username, email, password, bio, profilePicture });
-            const fullUser = await userService.getUserById(user.id);
-            setUser(fullUser);
-            localStorage.setItem('user', JSON.stringify(fullUser));
+            await authService.register({ username, email, password, bio, profilePicture });
+            // Auto-login after registration
+            await login(username, password);
         } catch (err) {
             setError('Registration failed');
             throw err;
@@ -84,7 +84,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     return (
-        <AuthContext.Provider value={{ user, loading, error, login, register, logout }}>
+        <AuthContext.Provider value={{ user, loading, error, login, register, logout, setUser }}>
             {children}
         </AuthContext.Provider>
     );

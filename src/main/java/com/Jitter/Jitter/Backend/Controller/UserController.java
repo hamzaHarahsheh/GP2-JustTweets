@@ -22,6 +22,9 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.List;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.Jitter.Jitter.Backend.Models.Follow;
+import java.security.Principal;
+import com.Jitter.Jitter.Backend.DTO.UserDTO;
 
 @RestController
 @RequestMapping("/users")
@@ -47,15 +50,17 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable String id) {
+    public ResponseEntity<UserDTO> getUserById(@PathVariable String id) {
         return userService.getById(id)
+                .map(user -> new UserDTO(user, userService.getFollowers(id).size(), userService.getFollowing(id).size()))
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/username/{username}")
-    public ResponseEntity<User> getUserByUsername(@PathVariable String username) {
+    public ResponseEntity<UserDTO> getUserByUsername(@PathVariable String username) {
         return userService.getByUsername(username)
+                .map(user -> new UserDTO(user, userService.getFollowers(user.getId()).size(), userService.getFollowing(user.getId()).size()))
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -170,5 +175,58 @@ public class UserController {
                             .body(user.getProfilePicture().getData());
                 })
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/{id}/following")
+    public List<User> getFollowing(@PathVariable String id) {
+        return userService.getFollowing(id);
+    }
+
+    @GetMapping("/search")
+    public List<User> searchUsers(@RequestParam("q") String query) {
+        return userService.searchByUsernameOrEmail(query);
+    }
+
+    @PostMapping("/follow/{userId}")
+    public ResponseEntity<?> followUser(@PathVariable String userId, Principal principal) {
+        String followerUsername = principal.getName();
+        User follower = userService.getByUsername(followerUsername).orElse(null);
+        if (follower == null || follower.getId().equals(userId)) {
+            return ResponseEntity.badRequest().body("Invalid follow request");
+        }
+        boolean success = userService.followUser(follower.getId(), userId);
+        if (!success) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("Already following");
+        }
+        int followersCount = userService.getFollowers(userId).size();
+        int followingCount = userService.getFollowing(follower.getId()).size();
+        return ResponseEntity.ok(new java.util.HashMap<>() {{
+            put("followersCount", followersCount);
+            put("followingCount", followingCount);
+        }});
+    }
+
+    @PostMapping("/unfollow/{userId}")
+    public ResponseEntity<?> unfollowUser(@PathVariable String userId, Principal principal) {
+        String followerUsername = principal.getName();
+        User follower = userService.getByUsername(followerUsername).orElse(null);
+        if (follower == null || follower.getId().equals(userId)) {
+            return ResponseEntity.badRequest().body("Invalid unfollow request");
+        }
+        boolean success = userService.unfollowUser(follower.getId(), userId);
+        if (!success) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("Not following");
+        }
+        int followersCount = userService.getFollowers(userId).size();
+        int followingCount = userService.getFollowing(follower.getId()).size();
+        return ResponseEntity.ok(new java.util.HashMap<>() {{
+            put("followersCount", followersCount);
+            put("followingCount", followingCount);
+        }});
+    }
+
+    @GetMapping("/{id}/followers")
+    public List<User> getFollowers(@PathVariable String id) {
+        return userService.getFollowers(id);
     }
 }
