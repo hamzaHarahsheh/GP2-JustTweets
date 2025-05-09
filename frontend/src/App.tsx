@@ -8,6 +8,7 @@ import Profile from './components/Profile';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import { Typography } from '@mui/material';
+import { CustomThemeProvider, useThemeContext } from './contexts/ThemeContext';
 
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading } = useAuth();
@@ -24,11 +25,19 @@ const AppLayout: React.FC = () => {
   const location = useLocation();
   const { user } = useAuth();
   const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
+  const { toggleTheme, mode } = useThemeContext();
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: 'inherit' }}>
       {user && !isAuthPage && <Sidebar />}
-      <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
+      <main style={{ flex: 1, maxWidth: 600, margin: '0 auto', background: 'inherit' }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', padding: 16 }}>
+          <button onClick={toggleTheme} style={{
+            background: 'none', border: 'none', color: '#1DA1F2', fontWeight: 600, cursor: 'pointer'
+          }}>
+            {mode === 'dark' ? 'Light Mode' : 'Dark Mode'}
+          </button>
+        </div>
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
@@ -53,18 +62,20 @@ const AppLayout: React.FC = () => {
             element={<Typography>404 Not Found</Typography>}
           />
         </Routes>
-      </Box>
-    </Box>
+      </main>
+    </div>
   );
 };
 
 const App: React.FC = () => {
   return (
     <AuthProvider>
-      <Router>
-        <CssBaseline />
-        <AppLayout />
-      </Router>
+      <CustomThemeProvider>
+        <Router>
+          <CssBaseline />
+          <AppLayout />
+        </Router>
+      </CustomThemeProvider>
     </AuthProvider>
   );
 };

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import {
     Home as HomeIcon,
@@ -22,6 +22,7 @@ import {
 
 const Sidebar: React.FC = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const { user, logout } = useAuth();
     const [dialogOpen, setDialogOpen] = useState(false);
 
@@ -39,32 +40,25 @@ const Sidebar: React.FC = () => {
 
     const profilePicUrl = user?.profilePicture?.data ? `data:${user.profilePicture.type};base64,${user.profilePicture.data}` : undefined;
 
+    // Helper to check if a route is active
+    const isActive = (path: string) => location.pathname === path;
+
     return (
-        <Box sx={{ width: 250, bgcolor: 'background.paper' }}>
-            <Box sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Box 
+        <Box sx={{ width: 260, bgcolor: 'background.paper', minHeight: '100vh', p: 2 }}>
+            {/* User info/header (not a nav item) */}
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 4 }}>
+                <Avatar
+                    src={profilePicUrl}
                     onClick={() => profilePicUrl && setDialogOpen(true)}
-                    sx={{ 
+                    sx={{
+                        width: 48,
+                        height: 48,
                         cursor: profilePicUrl ? 'pointer' : 'default',
-                        '&:hover': {
-                            opacity: 0.8
-                        }
+                        '&:hover': { opacity: 0.8 }
                     }}
-                >
-                    <Avatar
-                        src={profilePicUrl}
-                        alt={user?.username}
-                        sx={{ 
-                            width: 40, 
-                            height: 40,
-                            '&:hover': {
-                                opacity: 0.8
-                            }
-                        }}
-                    />
-                </Box>
+                />
                 <Box>
-                    <Typography variant="subtitle1" fontWeight="bold">
+                    <Typography fontWeight="bold">
                         {user?.username}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
@@ -75,20 +69,20 @@ const Sidebar: React.FC = () => {
             
             <List>
                 {menuItems.map((item) => (
-                    <ListItem key={item.text} disablePadding>
+                    <ListItem disablePadding key={item.text}>
                         <ListItemButton
+                            selected={isActive(item.path)}
                             onClick={() => navigate(item.path)}
                             sx={{
-                                '&:hover': {
-                                    backgroundColor: '#e3f2fd',
-                                    color: '#1976d2',
-                                    '& .MuiListItemIcon-root, & .MuiListItemText-primary': {
-                                        color: '#1976d2',
-                                    },
-                                },
+                                borderRadius: 8,
+                                mb: 1,
+                                backgroundColor: isActive(item.path) ? '#1a2733' : 'inherit',
+                                color: isActive(item.path) ? '#1DA1F2' : 'inherit',
                             }}
                         >
-                            <ListItemIcon>{item.icon}</ListItemIcon>
+                            <ListItemIcon>
+                                {item.icon}
+                            </ListItemIcon>
                             <ListItemText primary={item.text} />
                         </ListItemButton>
                     </ListItem>
@@ -96,15 +90,7 @@ const Sidebar: React.FC = () => {
                 <ListItem disablePadding>
                     <ListItemButton
                         onClick={handleLogout}
-                        sx={{
-                            '&:hover': {
-                                backgroundColor: '#e3f2fd',
-                                color: '#1976d2',
-                                '& .MuiListItemIcon-root, & .MuiListItemText-primary': {
-                                    color: '#1976d2',
-                                },
-                            },
-                        }}
+                        sx={{ borderRadius: 8, mb: 1 }}
                     >
                         <ListItemIcon>
                             <LogoutIcon />
