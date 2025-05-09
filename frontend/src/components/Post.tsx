@@ -43,6 +43,8 @@ const Post: React.FC<PostProps> = ({ post }) => {
     const [likesDialogOpen, setLikesDialogOpen] = useState(false);
     const [likeUsers, setLikeUsers] = useState<User[]>([]);
     const [loadingLikes, setLoadingLikes] = useState(false);
+    const [openImageDialog, setOpenImageDialog] = useState(false);
+    const [dialogImageUrl, setDialogImageUrl] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -161,15 +163,44 @@ const Post: React.FC<PostProps> = ({ post }) => {
                 </Typography>
                 {post.image && post.image.length > 0 && (
                     <Box sx={{ display: 'flex', gap: 1, mb: 2, overflowX: 'auto' }}>
-                        {post.image.map((img, index) => (
-                            <CardMedia
-                                key={index}
-                                component="img"
-                                image={img.data}
-                                alt={`Post image ${index + 1}`}
-                                sx={{ maxWidth: 300, maxHeight: 300, objectFit: 'contain' }}
-                            />
-                        ))}
+                        {post.image.map((img, index) => {
+                            const imageUrl = `http://localhost:8081/posts/${post.id}/image/${index}`;
+                            return (
+                                <Box
+                                    key={index}
+                                    sx={{
+                                        maxWidth: 400,
+                                        maxHeight: 400,
+                                        width: '100%',
+                                        height: 'auto',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        borderRadius: 2,
+                                        overflow: 'hidden',
+                                        background: '#f5f5f5',
+                                        cursor: 'pointer'
+                                    }}
+                                    onClick={() => {
+                                        setDialogImageUrl(imageUrl);
+                                        setOpenImageDialog(true);
+                                    }}
+                                >
+                                    <img
+                                        src={imageUrl}
+                                        alt={`Post image ${index + 1}`}
+                                        style={{
+                                            width: '100%',
+                                            height: 'auto',
+                                            objectFit: 'contain',
+                                            display: 'block',
+                                            maxHeight: 400,
+                                            maxWidth: 400,
+                                        }}
+                                    />
+                                </Box>
+                            );
+                        })}
                     </Box>
                 )}
                 <Stack direction="row" spacing={2}>
@@ -277,6 +308,52 @@ const Post: React.FC<PostProps> = ({ post }) => {
                 <DialogActions>
                     <Button onClick={handleCloseLikesDialog}>Close</Button>
                 </DialogActions>
+            </Dialog>
+
+            <Dialog
+                open={openImageDialog}
+                onClose={() => setOpenImageDialog(false)}
+                maxWidth="md"
+                PaperProps={{
+                    sx: {
+                        background: 'transparent',
+                        boxShadow: 'none',
+                        overflow: 'visible',
+                    }
+                }}
+                BackdropProps={{
+                    sx: {
+                        backdropFilter: 'blur(8px)',
+                        backgroundColor: 'rgba(0,0,0,0.2)'
+                    }
+                }}
+            >
+                <Box
+                    sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: '100%',
+                        height: '100%',
+                        minWidth: 300,
+                        minHeight: 300,
+                    }}
+                >
+                    {dialogImageUrl && (
+                        <img
+                            src={dialogImageUrl}
+                            alt="Post"
+                            style={{
+                                maxWidth: '90vw',
+                                maxHeight: '80vh',
+                                objectFit: 'contain',
+                                borderRadius: 8,
+                                boxShadow: 'none',
+                                background: 'transparent'
+                            }}
+                        />
+                    )}
+                </Box>
             </Dialog>
         </Card>
     );

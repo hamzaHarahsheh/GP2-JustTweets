@@ -14,6 +14,8 @@ const Timeline: React.FC = () => {
         const fetchPosts = async () => {
             try {
                 const data = await postService.getAllPosts();
+                // Sort posts by createdAt (most recent first)
+                data.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
                 setPosts(data);
                 setError(null);
             } catch (err) {
