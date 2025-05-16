@@ -61,9 +61,6 @@ const Sidebar: React.FC = () => {
                     <Typography fontWeight="bold">
                         {user?.username}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                        {user?.email}
-                    </Typography>
                 </Box>
             </Box>
             

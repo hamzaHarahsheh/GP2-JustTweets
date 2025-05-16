@@ -192,9 +192,6 @@ const Profile: React.FC = () => {
                     <Typography variant="h4" fontWeight={700} sx={{ letterSpacing: 1 }}>
                         {profileUser.username}
                     </Typography>
-                    <Typography variant="body1" color="text.secondary" sx={{ mt: 0.5 }}>
-                        {profileUser.email}
-                    </Typography>
                     {profileUser.bio && (
                         <Typography variant="body2" color="text.secondary" sx={{ mt: 1, fontStyle: 'italic' }}>
                             {profileUser.bio}

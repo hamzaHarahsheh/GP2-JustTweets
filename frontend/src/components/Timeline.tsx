@@ -172,7 +172,6 @@ const Timeline: React.FC = () => {
                                         </ListItemAvatar>
                                         <ListItemText
                                             primary={<span style={{ cursor: 'pointer', fontWeight: 500 }} onClick={() => navigate(`/profile/${result.username}`)}>{result.username}</span>}
-                                            secondary={result.email}
                                         />
                                     </ListItem>
                                 ))}
