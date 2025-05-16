@@ -20,8 +20,9 @@ public class User {
     private String username;
     private String password;
     @Indexed(unique = true)
-    @Pattern(regexp = "^[A-Za-z]+\\d{2}@[A-Za-z]+\\.just\\.edu\\.jo$",
-             message = "Email must be in the format username##@[any letters].just.edu.jo")
+
+    @Pattern(regexp = "^[A-Za-z]+\\d{2}@cit\\.just\\.edu\\.jo$",
+             message = "Email must be in the format username##@cit.just.edu.jo")
     private String email;
 
     private String bio;

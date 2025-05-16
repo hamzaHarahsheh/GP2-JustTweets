@@ -24,7 +24,7 @@ const Register: React.FC = () => {
     const [formError, setFormError] = useState<string | null>(null);
 
     const validateEmail = (email: string) => {
-        const regex = /^[A-Za-z]+\d{2}@[A-Za-z]+\.just\.edu\.jo$/;
+        const regex = /^[A-Za-z]+\d{2}@cit\.just\.edu\.jo$/;
         return regex.test(email);
     };
 
@@ -38,7 +38,7 @@ const Register: React.FC = () => {
         }
 
         if (!validateEmail(email)) {
-            setFormError('Email must be in the format username##@faculty.just.edu.jo (e.g., john12@cit.just.edu.jo)');
+            setFormError('Email must be in the format username##@cit.just.edu.jo');
             return;
         }
 
@@ -95,7 +95,7 @@ const Register: React.FC = () => {
                             onChange={(e) => setEmail(e.target.value)}
                             margin="normal"
                             required
-                            helperText="Format: username##@faculty.just.edu.jo (e.g., john12@cit.just.edu.jo)"
+                            helperText="Format: username##@cit.just.edu.jo"
                         />
                         <TextField
                             fullWidth

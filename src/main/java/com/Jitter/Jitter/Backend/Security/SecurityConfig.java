@@ -31,7 +31,6 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable())
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint((request, response, authException) -> {
@@ -44,29 +43,12 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
-                        // Public endpoints
                         .requestMatchers(HttpMethod.POST, "/users/register").permitAll()
                         .requestMatchers(HttpMethod.POST, "/users/login").permitAll()
                         .requestMatchers(HttpMethod.GET, "/users/username/**", "/users/email/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/users/*/profile-picture").permitAll()
                         .requestMatchers(HttpMethod.GET, "/posts/*/image/*").permitAll()
-                        
-                        // User profile endpoints - allow viewing without authentication
-                        .requestMatchers(HttpMethod.GET, "/users/{id}").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/users/{id}/posts").permitAll()
-                        
-                        // Authenticated actions
                         .requestMatchers(HttpMethod.GET, "/users/search").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/users/{id}/followers").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/users/{id}/following").authenticated()
-                        .requestMatchers(HttpMethod.POST, "/users/follow/**").authenticated()
-                        .requestMatchers(HttpMethod.POST, "/users/unfollow/**").authenticated()
-                        .requestMatchers(HttpMethod.POST, "/posts/**").authenticated()
-                        .requestMatchers(HttpMethod.POST, "/comments/**").authenticated()
-                        .requestMatchers(HttpMethod.POST, "/likes/**").authenticated()
-                        .requestMatchers(HttpMethod.DELETE, "/posts/**").authenticated()
-                        .requestMatchers(HttpMethod.DELETE, "/comments/**").authenticated()
-                        .requestMatchers(HttpMethod.DELETE, "/likes/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .httpBasic(Customizer.withDefaults())

@@ -10,8 +10,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.web.filter.OncePerRequestFilter;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 
 import java.io.IOException;
 
@@ -27,47 +25,27 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
         String path = request.getRequestURI();
-        
-        // Allow access to public endpoints without authentication
         if (path.startsWith("/users/register") ||
             path.startsWith("/users/login") ||
             path.startsWith("/users/username") ||
-            path.startsWith("/users/email") ||
-            path.startsWith("/users/") && path.endsWith("/profile-picture")) {
+            path.startsWith("/users/email")) {
             filterChain.doFilter(request, response);
             return;
         }
-
-        try {
-            String token = getJWTFromRequest(request);
-            if (token != null) {
-                if (jwtGenerator.validateToken(token)) {
-                    String username = jwtGenerator.getUsernameFromJWT(token);
-                    UserDetails userDetails = customeUserDetailsService.loadUserByUsername(username);
-                    
-                    UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
-                            userDetails, null, userDetails.getAuthorities());
-                    authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    SecurityContextHolder.getContext().setAuthentication(authenticationToken);
-                } else {
-                    throw new AuthenticationCredentialsNotFoundException("Invalid token");
-                }
-            } else {
-                // For GET requests to user profiles, allow access without token
-                if (request.getMethod().equals("GET") && path.startsWith("/users/")) {
-                    filterChain.doFilter(request, response);
-                    return;
-                }
-                throw new AuthenticationCredentialsNotFoundException("No token provided");
-            }
-        } catch (AuthenticationException e) {
-            SecurityContextHolder.clearContext();
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("application/json");
-            response.getWriter().write("{\"error\": \"" + e.getMessage() + "\"}");
-            return;
+        String token = getJWTFromRequest(request);
+        System.out.println("JWT Token received: " + token);
+        if(token != null && jwtGenerator.validateToken(token)) {
+            System.out.println("JWT Token is valid");
+            String username = jwtGenerator.getUsernameFromJWT(token);
+            System.out.println("Username from JWT: " + username);
+            UserDetails userDetails = customeUserDetailsService.loadUserByUsername(username);
+            UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
+                    userDetails, null, userDetails.getAuthorities());
+            authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+            SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+        } else {
+            System.out.println("JWT Token is invalid or missing");
         }
-
         filterChain.doFilter(request, response);
     }
 
