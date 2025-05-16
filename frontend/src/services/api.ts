@@ -18,6 +18,10 @@ api.interceptors.request.use((config) => {
             ...config.headers,
             'Content-Type': 'application/json'
         };
+    } else {
+        if (config.headers && config.headers['Content-Type']) {
+            delete config.headers['Content-Type'];
+        }
     }
     return config;
 });
@@ -39,8 +43,7 @@ export const authService = {
         if (credentials.profilePicture) {
             formData.append('profilePicture', credentials.profilePicture);
         }
-        const response = await api.post<User>('/users/register', formData);
-        return response.data;
+        return (await api.post<User>('/users/register', formData)).data;
     },
 };
 
