@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { userService, postService } from '../services/api';
@@ -17,9 +17,21 @@ import {
     Stack,
     Divider,
     useTheme,
+    CircularProgress,
 } from '@mui/material';
 import { Edit as EditIcon } from '@mui/icons-material';
-import Post from './Post';
+
+// Lazy load components
+const Post = lazy(() => import('./Post'));
+const EditProfileDialog = lazy(() => import('./dialogs/EditProfileDialog'));
+const FollowersDialog = lazy(() => import('./dialogs/FollowersDialog'));
+const FollowingDialog = lazy(() => import('./dialogs/FollowingDialog'));
+
+const LoadingFallback = () => (
+    <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
+        <CircularProgress />
+    </Box>
+);
 
 const Profile: React.FC = () => {
     const { username } = useParams<{ username: string }>();
@@ -236,32 +248,26 @@ const Profile: React.FC = () => {
                     No posts yet.
                 </Typography>
             ) : (
-                posts.map((post) => (
-                    <Post key={post.id} post={post} />
-                ))
+                <Suspense fallback={<LoadingFallback />}>
+                    {posts.map((post) => (
+                        <Post key={post.id} post={post} />
+                    ))}
+                </Suspense>
             )}
 
             {/* Edit Profile Dialog */}
-            <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)}>
-                <DialogTitle>Edit Profile</DialogTitle>
-                <DialogContent>
-                    <Box sx={{ mt: 2 }}>
-                        <input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => setProfilePicture(e.target.files?.[0] || null)}
-                            style={{ marginBottom: 16 }}
-                        />
-                        {/* Add more fields as needed */}
-                    </Box>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setEditDialogOpen(false)}>Cancel</Button>
-                    <Button onClick={handleEditProfile} variant="contained">
-                        Save
-                    </Button>
-                </DialogActions>
-            </Dialog>
+            <Suspense fallback={null}>
+                <EditProfileDialog
+                    open={editDialogOpen}
+                    onClose={() => setEditDialogOpen(false)}
+                    profileUser={profileUser}
+                    bio={bio}
+                    setBio={setBio}
+                    profilePicture={profilePicture}
+                    setProfilePicture={setProfilePicture}
+                    onSave={handleEditProfile}
+                />
+            </Suspense>
 
             {/* Profile Picture Dialog */}
             <Dialog
@@ -307,64 +313,24 @@ const Profile: React.FC = () => {
             </Dialog>
 
             {/* Followers Dialog */}
-            <Dialog open={followersDialogOpen} onClose={() => setFollowersDialogOpen(false)}>
-                <DialogTitle>Followers</DialogTitle>
-                <DialogContent>
-                    {followersList.length === 0 ? (
-                        <Typography>No followers yet.</Typography>
-                    ) : (
-                        followersList.map(u => (
-                            <Box key={u.id} sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
-                                <Avatar
-                                    src={u.profilePicture?.data ? `data:${u.profilePicture.type};base64,${u.profilePicture.data}` : undefined}
-                                    sx={{ cursor: 'pointer' }}
-                                    onClick={() => handleNavigateToProfile(u.username, () => setFollowersDialogOpen(false))}
-                                />
-                                <Typography
-                                    fontWeight={500}
-                                    sx={{ cursor: 'pointer', textDecoration: 'underline' }}
-                                    onClick={() => handleNavigateToProfile(u.username, () => setFollowersDialogOpen(false))}
-                                >
-                                    {u.username}
-                                </Typography>
-                            </Box>
-                        ))
-                    )}
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setFollowersDialogOpen(false)}>Close</Button>
-                </DialogActions>
-            </Dialog>
+            <Suspense fallback={null}>
+                <FollowersDialog
+                    open={followersDialogOpen}
+                    onClose={() => setFollowersDialogOpen(false)}
+                    followers={followersList}
+                    onProfileClick={handleNavigateToProfile}
+                />
+            </Suspense>
 
             {/* Following Dialog */}
-            <Dialog open={followingDialogOpen} onClose={() => setFollowingDialogOpen(false)}>
-                <DialogTitle>Following</DialogTitle>
-                <DialogContent>
-                    {followingList.length === 0 ? (
-                        <Typography>Not following anyone yet.</Typography>
-                    ) : (
-                        followingList.map(u => (
-                            <Box key={u.id} sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
-                                <Avatar
-                                    src={u.profilePicture?.data ? `data:${u.profilePicture.type};base64,${u.profilePicture.data}` : undefined}
-                                    sx={{ cursor: 'pointer' }}
-                                    onClick={() => handleNavigateToProfile(u.username, () => setFollowingDialogOpen(false))}
-                                />
-                                <Typography
-                                    fontWeight={500}
-                                    sx={{ cursor: 'pointer', textDecoration: 'underline' }}
-                                    onClick={() => handleNavigateToProfile(u.username, () => setFollowingDialogOpen(false))}
-                                >
-                                    {u.username}
-                                </Typography>
-                            </Box>
-                        ))
-                    )}
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setFollowingDialogOpen(false)}>Close</Button>
-                </DialogActions>
-            </Dialog>
+            <Suspense fallback={null}>
+                <FollowingDialog
+                    open={followingDialogOpen}
+                    onClose={() => setFollowingDialogOpen(false)}
+                    following={followingList}
+                    onProfileClick={handleNavigateToProfile}
+                />
+            </Suspense>
         </Box>
     );
 };

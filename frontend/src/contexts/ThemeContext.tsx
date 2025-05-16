@@ -1,12 +1,29 @@
-import React, { createContext, useContext, useMemo, useState } from 'react';
+import React, { createContext, useContext, useMemo, useState, useEffect } from 'react';
 import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
 
-const ThemeContext = createContext({ toggleTheme: () => {}, mode: 'light' });
+type ThemeMode = 'light' | 'dark';
+
+interface ThemeContextType {
+    toggleTheme: () => void;
+    mode: ThemeMode;
+}
+
+const ThemeContext = createContext<ThemeContextType>({ toggleTheme: () => {}, mode: 'light' });
 
 export const useThemeContext = () => useContext(ThemeContext);
 
 export const CustomThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [mode, setMode] = useState<'light' | 'dark'>('light');
+    // Initialize theme from localStorage or default to 'light'
+    const [mode, setMode] = useState<ThemeMode>(() => {
+        const savedMode = localStorage.getItem('themeMode');
+        return (savedMode as ThemeMode) || 'light';
+    });
+
+    // Save theme preference to localStorage whenever it changes
+    useEffect(() => {
+        localStorage.setItem('themeMode', mode);
+    }, [mode]);
+
     const toggleTheme = () => setMode((prev) => (prev === 'light' ? 'dark' : 'light'));
 
     const theme = useMemo(

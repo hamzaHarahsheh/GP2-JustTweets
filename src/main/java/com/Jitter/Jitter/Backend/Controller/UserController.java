@@ -73,26 +73,26 @@ public class UserController {
     }
 
     @PostMapping(path = "/register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<User> createUser(
+    public ResponseEntity<?> createUser(
             @RequestPart("user") String userJson,
             @RequestPart(value = "profilePicture", required = false) MultipartFile profilePicture) {
         try {
             User user = objectMapper.readValue(userJson, User.class);
-            if (userService.getByUsername(user.getUsername()).isPresent()) {
-                return ResponseEntity.status(HttpStatus.CONFLICT).body(null);
-            }
-            if (userService.getByEmail(user.getEmail()).isPresent()) {
-                return ResponseEntity.status(HttpStatus.CONFLICT).body(null);
-            }
+            
+            // Basic validation
             if (user.getPassword() == null || user.getPassword().isEmpty()) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Password is required");
             }
             if (user.getUsername() == null || user.getUsername().isEmpty()) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Username is required");
             }
             if (user.getEmail() == null || user.getEmail().isEmpty()) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Email is required");
             }
+
             user.setPassword(passwordEncoder.encode(user.getPassword()));
             User savedUser = userService.createUser(user, profilePicture);
             Role role = new Role();
@@ -100,8 +100,20 @@ public class UserController {
             role.setUserId(savedUser.getId());
             roleRepository.save(role);
             return ResponseEntity.status(HttpStatus.CREATED).body(savedUser);
+        } catch (RuntimeException e) {
+            if (e.getMessage().equals("Username already exists")) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body("Username is already taken");
+            }
+            if (e.getMessage().equals("Email already exists")) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body("Email is already registered");
+            }
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("Registration failed: " + e.getMessage());
         } catch (IOException e) {
-            throw new RuntimeException("Failed to process profile picture or user data", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("Failed to process profile picture or user data");
         }
     }
 

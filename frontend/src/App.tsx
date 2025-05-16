@@ -1,15 +1,16 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { Box, CssBaseline } from '@mui/material';
+import { Box, CssBaseline, CircularProgress, Typography } from '@mui/material';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-import Sidebar from './components/Sidebar';
-import Timeline from './components/Timeline';
-import Profile from './components/Profile';
-import Explore from './components/Explore';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import { Typography } from '@mui/material';
 import { CustomThemeProvider, useThemeContext } from './contexts/ThemeContext';
+
+// Lazy load components
+const Sidebar = lazy(() => import('./components/Sidebar'));
+const Timeline = lazy(() => import('./components/Timeline'));
+const Profile = lazy(() => import('./components/Profile'));
+const Explore = lazy(() => import('./components/Explore'));
+const Login = lazy(() => import('./pages/Login'));
+const Register = lazy(() => import('./pages/Register'));
 
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading } = useAuth();
@@ -21,6 +22,12 @@ const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => 
   return user ? <>{children}</> : <Navigate to="/login" />;
 };
 
+const LoadingFallback = () => (
+  <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+    <CircularProgress />
+  </Box>
+);
+
 // New component to handle layout
 const AppLayout: React.FC = () => {
   const location = useLocation();
@@ -30,7 +37,11 @@ const AppLayout: React.FC = () => {
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: 'inherit' }}>
-      {user && !isAuthPage && <Sidebar />}
+      {user && !isAuthPage && (
+        <Suspense fallback={<LoadingFallback />}>
+          <Sidebar />
+        </Suspense>
+      )}
       <main style={{ flex: 1, maxWidth: 600, margin: '0 auto', background: 'inherit' }}>
         <div style={{ display: 'flex', justifyContent: 'flex-end', padding: 16 }}>
           <button onClick={toggleTheme} style={{
@@ -39,38 +50,40 @@ const AppLayout: React.FC = () => {
             {mode === 'dark' ? 'Light Mode' : 'Dark Mode'}
           </button>
         </div>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route
-            path="/"
-            element={
-              <PrivateRoute>
-                <Timeline />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/explore"
-            element={
-              <PrivateRoute>
-                <Explore />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/profile/:username"
-            element={
-              <PrivateRoute>
-                <Profile />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="*"
-            element={<Typography>404 Not Found</Typography>}
-          />
-        </Routes>
+        <Suspense fallback={<LoadingFallback />}>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route
+              path="/"
+              element={
+                <PrivateRoute>
+                  <Timeline />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/explore"
+              element={
+                <PrivateRoute>
+                  <Explore />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/profile/:username"
+              element={
+                <PrivateRoute>
+                  <Profile />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="*"
+              element={<Typography>404 Not Found</Typography>}
+            />
+          </Routes>
+        </Suspense>
       </main>
     </div>
   );

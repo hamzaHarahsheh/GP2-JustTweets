@@ -8,6 +8,7 @@ import com.Jitter.Jitter.Backend.Models.Follow;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.dao.DuplicateKeyException;
 import java.io.IOException;
 import java.util.Date;
 import java.util.List;
@@ -42,19 +43,30 @@ public class UserService {
     }
 
     public User createUser(User user, MultipartFile profilePicture) throws IOException {
-        user.setCreatedAt(new Date());
-        user.setUpdatedAt(new Date());
+        try {
+            user.setCreatedAt(new Date());
+            user.setUpdatedAt(new Date());
 
-        if (profilePicture != null && !profilePicture.isEmpty()) {
-            Media media = new Media();
-            media.setFileName(profilePicture.getOriginalFilename());
-            media.setType(profilePicture.getContentType());
-            media.setData(profilePicture.getBytes());
-            media.setCreatedAt(new Date());
-            user.setProfilePicture(media);
+            if (profilePicture != null && !profilePicture.isEmpty()) {
+                Media media = new Media();
+                media.setFileName(profilePicture.getOriginalFilename());
+                media.setType(profilePicture.getContentType());
+                media.setData(profilePicture.getBytes());
+                media.setCreatedAt(new Date());
+                user.setProfilePicture(media);
+            }
+
+            return userRepository.save(user);
+        } catch (DuplicateKeyException e) {
+            // If we get a duplicate key error, check which field caused it
+            if (userRepository.findByUsername(user.getUsername()).isPresent()) {
+                throw new RuntimeException("Username already exists");
+            }
+            if (userRepository.findByEmail(user.getEmail()).isPresent()) {
+                throw new RuntimeException("Email already exists");
+            }
+            throw e; // If it's some other duplicate key error
         }
-
-        return userRepository.save(user);
     }
 
     public Optional<User> updateUser(String id, User updatedUser) {
