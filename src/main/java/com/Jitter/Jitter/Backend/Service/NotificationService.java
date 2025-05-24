@@ -3,6 +3,9 @@ package com.Jitter.Jitter.Backend.Service;
 import com.Jitter.Jitter.Backend.Models.Notification;
 import com.Jitter.Jitter.Backend.Repository.NotificationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +41,20 @@ public class NotificationService {
             return notifications != null ? notifications : java.util.Collections.emptyList();
         } catch (Exception e) {
             logger.error("Service: Error fetching notifications for userId: {}", userId, e);
+            throw e;
+        }
+    }
+
+    public Page<Notification> getUserNotificationsPaginated(String userId, int page, int size) {
+        try {
+            logger.info("Service: Fetching paginated notifications for userId: {}, page: {}, size: {}", userId, page, size);
+            Pageable pageable = PageRequest.of(page, size);
+            Page<Notification> notifications = notificationRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable);
+            logger.info("Service: Found {} notifications on page {} for userId: {}", 
+                notifications.getNumberOfElements(), page, userId);
+            return notifications;
+        } catch (Exception e) {
+            logger.error("Service: Error fetching paginated notifications for userId: {}", userId, e);
             throw e;
         }
     }

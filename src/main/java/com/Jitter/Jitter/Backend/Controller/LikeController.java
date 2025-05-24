@@ -7,6 +7,7 @@ import com.Jitter.Jitter.Backend.Service.NotificationService;
 import com.Jitter.Jitter.Backend.Repository.PostRepository;
 import com.Jitter.Jitter.Backend.Models.Post;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -70,6 +71,14 @@ public class LikeController {
     @GetMapping("/notifications/user/{userId}")
     public List<Notification> getUserNotifications(@PathVariable String userId) {
         return notificationService.getUserNotifications(userId);
+    }
+
+    @GetMapping("/notifications/user/{userId}/paginated")
+    public Page<Notification> getUserNotificationsPaginated(
+            @PathVariable String userId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return notificationService.getUserNotificationsPaginated(userId, page, size);
     }
 
     @GetMapping("/notifications/unread/count/{userId}")

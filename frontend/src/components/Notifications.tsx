@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '@mui/material/styles';
-import { Avatar, Button } from '@mui/material';
+import { Avatar, Button, CircularProgress } from '@mui/material';
 import { notificationService, userService } from '../services/api';
 import {
     Favorite as LikeIcon,
@@ -13,6 +13,7 @@ import {
     PostAdd as NewPostIcon,
     Circle as UnreadIcon,
     DoneAll as MarkAllReadIcon,
+    ExpandMore as LoadMoreIcon,
 } from '@mui/icons-material';
 
 interface Notification {
@@ -33,38 +34,36 @@ interface NotificationWithUserData extends Notification {
     };
 }
 
+const NOTIFICATIONS_PER_PAGE = 10;
+
 const Notifications: React.FC = () => {
     const [notifications, setNotifications] = useState<NotificationWithUserData[]>([]);
     const [loading, setLoading] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [notFound, setNotFound] = useState(false);
+    const [hasMore, setHasMore] = useState(true);
+    const [currentPage, setCurrentPage] = useState(0);
+    const [totalPages, setTotalPages] = useState(0);
     const [hoveredNotification, setHoveredNotification] = useState<string | null>(null);
     const navigate = useNavigate();
     const { user } = useAuth();
     const theme = useTheme();
     const userId = user?.id;
 
-    useEffect(() => {
-        if (userId) {
-            fetchNotifications();
-            // Don't mark all as read automatically - let users click individual notifications
-        }
-    }, [userId]);
-
-    const fetchNotifications = async () => {
-        if (!userId) {
-            setError('User not authenticated');
-            setLoading(false);
-            return;
-        }
+    const fetchNotificationsPage = useCallback(async (page: number, isLoadMore: boolean = false) => {
+        if (!userId) return;
 
         try {
-            setError(null); // Clear any previous errors
-            const notifications = await notificationService.getUserNotifications(userId);
+            if (!isLoadMore) setLoading(true);
+            else setLoadingMore(true);
+            
+            setError(null);
+            
+            const paginatedData = await notificationService.getUserNotificationsPaginated(userId, page, NOTIFICATIONS_PER_PAGE);
             
             // Fetch usernames and profile pictures for each notification
             const notificationsWithUserData = await Promise.all(
-                notifications.map(async (notification) => {
+                paginatedData.content.map(async (notification) => {
                     try {
                         const sourceUser = await userService.getUserById(notification.sourceUserId);
                         return {
@@ -76,20 +75,29 @@ const Notifications: React.FC = () => {
                         console.error(`Error fetching user for ID ${notification.sourceUserId}:`, error);
                         return {
                             ...notification,
-                            sourceUsername: notification.sourceUserId, // fallback to userId if username fetch fails
+                            sourceUsername: notification.sourceUserId,
                             sourceUserProfilePicture: undefined
                         };
                     }
                 })
             );
+
+            if (isLoadMore) {
+                setNotifications(prev => [...prev, ...notificationsWithUserData]);
+            } else {
+                setNotifications(notificationsWithUserData);
+            }
             
-            setNotifications(notificationsWithUserData);
-            setLoading(false);
+            setTotalPages(paginatedData.totalPages);
+            setHasMore(!paginatedData.last);
+            setCurrentPage(page);
+            
         } catch (error: any) {
             console.error('Error fetching notifications:', error);
             if (error.response) {
                 if (error.response.status === 404) {
-                    setNotFound(true);
+                    setNotifications([]);
+                    setHasMore(false);
                 } else if (error.response.status === 401) {
                     setError('Authentication required. Please log in again.');
                 } else if (error.response.status === 500) {
@@ -102,7 +110,21 @@ const Notifications: React.FC = () => {
             } else {
                 setError('Unable to load notifications at this time. Please try again later.');
             }
+        } finally {
             setLoading(false);
+            setLoadingMore(false);
+        }
+    }, [userId]);
+
+    useEffect(() => {
+        if (userId) {
+            fetchNotificationsPage(0);
+        }
+    }, [fetchNotificationsPage, userId]);
+
+    const loadMore = () => {
+        if (hasMore && !loadingMore) {
+            fetchNotificationsPage(currentPage + 1, true);
         }
     };
 
@@ -111,7 +133,6 @@ const Notifications: React.FC = () => {
         
         try {
             await notificationService.markAllAsRead(userId);
-            // Update local state to mark all notifications as read
             setNotifications(prev => 
                 prev.map(n => ({ ...n, read: true }))
             );
@@ -121,11 +142,9 @@ const Notifications: React.FC = () => {
     };
 
     const handleNotificationClick = async (notification: NotificationWithUserData) => {
-        // Mark this specific notification as read when clicked
         if (!notification.read) {
             try {
                 await notificationService.markAsRead(notification.id);
-                // Update local state to reflect the notification as read
                 setNotifications(prev => 
                     prev.map(n => 
                         n.id === notification.id 
@@ -138,7 +157,6 @@ const Notifications: React.FC = () => {
             }
         }
 
-        // Navigate based on notification type
         switch (notification.type) {
             case 'LIKE':
             case 'COMMENT':
@@ -242,7 +260,7 @@ const Notifications: React.FC = () => {
     const containerStyle = {
         position: 'fixed' as const,
         top: '0',
-        left: '260px', // Right after the sidebar
+        left: '260px',
         width: 'calc(100vw - 260px)',
         height: '100vh',
         backgroundColor: theme.palette.background.default,
@@ -257,14 +275,7 @@ const Notifications: React.FC = () => {
                 <div style={{ maxWidth: '600px' }}>
                     <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', height: '256px' }}>
                         <div style={{ textAlign: 'left' }}>
-                            <div style={{
-                                width: '48px',
-                                height: '48px',
-                                border: '2px solid #3b82f6',
-                                borderTop: '2px solid transparent',
-                                borderRadius: '50%',
-                                animation: 'spin 1s linear infinite'
-                            }}></div>
+                            <CircularProgress />
                             <p style={{ marginTop: '16px', color: theme.palette.text.secondary }}>Loading notifications...</p>
                         </div>
                     </div>
@@ -300,7 +311,7 @@ const Notifications: React.FC = () => {
         );
     }
 
-    if (notFound || notifications.length === 0) {
+    if (notifications.length === 0) {
         return (
             <div style={containerStyle}>
                 <div style={{ maxWidth: '600px' }}>
@@ -349,6 +360,7 @@ const Notifications: React.FC = () => {
                         </Button>
                     )}
                 </div>
+                
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-start' }}>
                     {notifications.map((notification) => (
                         <div
@@ -393,13 +405,44 @@ const Notifications: React.FC = () => {
                         </div>
                     ))}
                 </div>
+
+                {/* Load More Button */}
+                {hasMore && (
+                    <div style={{ display: 'flex', justifyContent: 'center', marginTop: '24px' }}>
+                        <Button
+                            onClick={loadMore}
+                            disabled={loadingMore}
+                            startIcon={loadingMore ? <CircularProgress size={16} /> : <LoadMoreIcon />}
+                            variant="outlined"
+                            sx={{
+                                color: theme.palette.text.secondary,
+                                borderColor: theme.palette.mode === 'dark' ? '#404040' : '#e5e7eb',
+                                '&:hover': {
+                                    borderColor: theme.palette.mode === 'dark' ? '#606060' : '#9ca3af',
+                                    backgroundColor: theme.palette.mode === 'dark' ? 'rgba(64, 64, 64, 0.1)' : 'rgba(156, 163, 175, 0.1)',
+                                }
+                            }}
+                        >
+                            {loadingMore ? 'Loading...' : 'Load More'}
+                        </Button>
+                    </div>
+                )}
+
+                {/* Pagination Info */}
+                {notifications.length > 0 && (
+                    <div style={{ 
+                        textAlign: 'center', 
+                        marginTop: '16px', 
+                        color: theme.palette.text.secondary, 
+                        fontSize: '0.875rem' 
+                    }}>
+                        Showing {notifications.length} notification{notifications.length !== 1 ? 's' : ''}
+                        {totalPages > 1 && (
+                            <span> • Page {currentPage + 1} of {totalPages}</span>
+                        )}
+                    </div>
+                )}
             </div>
-            <style>{`
-                @keyframes spin {
-                    0% { transform: rotate(0deg); }
-                    100% { transform: rotate(360deg); }
-                }
-            `}</style>
         </div>
     );
 };

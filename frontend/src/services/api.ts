@@ -11,6 +11,17 @@ interface Notification {
     createdAt: string;
 }
 
+interface PaginatedNotifications {
+    content: Notification[];
+    totalElements: number;
+    totalPages: number;
+    size: number;
+    number: number;
+    first: boolean;
+    last: boolean;
+    numberOfElements: number;
+}
+
 const API_URL = 'http://localhost:8081';
 
 const api = axios.create({
@@ -159,6 +170,11 @@ export const userService = {
 export const notificationService = {
     getUserNotifications: async (userId: string): Promise<Notification[]> => {
         const response = await api.get<Notification[]>(`/likes/notifications/user/${userId}`);
+        return response.data;
+    },
+
+    getUserNotificationsPaginated: async (userId: string, page: number = 0, size: number = 10): Promise<PaginatedNotifications> => {
+        const response = await api.get<PaginatedNotifications>(`/likes/notifications/user/${userId}/paginated?page=${page}&size=${size}`);
         return response.data;
     },
 
