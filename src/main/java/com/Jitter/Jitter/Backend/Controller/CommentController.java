@@ -1,10 +1,15 @@
 package com.Jitter.Jitter.Backend.Controller;
 
 import com.Jitter.Jitter.Backend.Models.Comment;
+import com.Jitter.Jitter.Backend.Models.Post;
+import com.Jitter.Jitter.Backend.Models.Follow;
 import com.Jitter.Jitter.Backend.DTO.CommentDTO;
 import com.Jitter.Jitter.Backend.Models.User;
 import com.Jitter.Jitter.Backend.Repository.CommentRepository;
+import com.Jitter.Jitter.Backend.Repository.PostRepository;
 import com.Jitter.Jitter.Backend.Service.CommentService;
+import com.Jitter.Jitter.Backend.Service.NotificationService;
+import com.Jitter.Jitter.Backend.Service.FollowService;
 import com.Jitter.Jitter.Backend.Service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -27,6 +32,15 @@ public class CommentController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private NotificationService notificationService;
+
+    @Autowired
+    private PostRepository postRepository;
+
+    @Autowired
+    private FollowService followService;
+
     @PostMapping("/add")
     public CommentDTO addComment(@RequestBody Comment comment, Principal principal) {
         String username = principal.getName();
@@ -35,6 +49,31 @@ public class CommentController {
         comment.setUserId(user.getId());
         comment.setCreatedAt(new Date());
         Comment saved = commentRepo.save(comment);
+        
+        // Create notification for the post owner
+        Post post = postRepository.findById(comment.getPostId()).orElse(null);
+        if (post != null && !post.getUserId().equals(user.getId())) {
+            notificationService.createNotification(post.getUserId(), "COMMENT", user.getId(), post.getId(), saved.getId(), null);
+        }
+        
+        // Create FRIEND_COMMENT notifications for all followers of the commenter
+        List<Follow> followers = followService.getFollowers(user.getId());
+        for (Follow follow : followers) {
+            // Don't send notification to the post owner (they already got a COMMENT notification)
+            // and don't send notification to the commenter themselves
+            if (!follow.getFollowerId().equals(user.getId()) && 
+                (post == null || !follow.getFollowerId().equals(post.getUserId()))) {
+                notificationService.createNotification(
+                    follow.getFollowerId(), 
+                    "FRIEND_COMMENT", 
+                    user.getId(), 
+                    post != null ? post.getId() : null, 
+                    saved.getId(), 
+                    null
+                );
+            }
+        }
+        
         String profilePictureUrl = user.getProfilePicture() != null && user.getProfilePicture().getData() != null
                 ? "/users/" + user.getId() + "/profile-picture"
                 : null;

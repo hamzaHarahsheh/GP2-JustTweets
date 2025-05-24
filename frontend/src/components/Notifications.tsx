@@ -3,18 +3,21 @@ import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '@mui/material/styles';
+import { Avatar, Button } from '@mui/material';
 import { notificationService, userService } from '../services/api';
 import {
     Favorite as LikeIcon,
     Comment as CommentIcon,
     PersonAdd as FollowIcon,
     Chat as FriendCommentIcon,
+    PostAdd as NewPostIcon,
     Circle as UnreadIcon,
+    DoneAll as MarkAllReadIcon,
 } from '@mui/icons-material';
 
 interface Notification {
     id: string;
-    type: 'LIKE' | 'COMMENT' | 'FOLLOW' | 'FRIEND_COMMENT';
+    type: 'LIKE' | 'COMMENT' | 'FOLLOW' | 'FRIEND_COMMENT' | 'NEW_POST';
     sourceUserId: string;
     postId?: string;
     content: string;
@@ -22,12 +25,16 @@ interface Notification {
     createdAt: string;
 }
 
-interface NotificationWithUsername extends Notification {
+interface NotificationWithUserData extends Notification {
     sourceUsername?: string;
+    sourceUserProfilePicture?: {
+        type: string;
+        data: string;
+    };
 }
 
 const Notifications: React.FC = () => {
-    const [notifications, setNotifications] = useState<NotificationWithUsername[]>([]);
+    const [notifications, setNotifications] = useState<NotificationWithUserData[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [notFound, setNotFound] = useState(false);
@@ -40,8 +47,7 @@ const Notifications: React.FC = () => {
     useEffect(() => {
         if (userId) {
             fetchNotifications();
-            // Mark all notifications as read when visiting the page
-            markAllAsRead();
+            // Don't mark all as read automatically - let users click individual notifications
         }
     }, [userId]);
 
@@ -56,26 +62,28 @@ const Notifications: React.FC = () => {
             setError(null); // Clear any previous errors
             const notifications = await notificationService.getUserNotifications(userId);
             
-            // Fetch usernames for each notification
-            const notificationsWithUsernames = await Promise.all(
+            // Fetch usernames and profile pictures for each notification
+            const notificationsWithUserData = await Promise.all(
                 notifications.map(async (notification) => {
                     try {
                         const sourceUser = await userService.getUserById(notification.sourceUserId);
                         return {
                             ...notification,
-                            sourceUsername: sourceUser.username
+                            sourceUsername: sourceUser.username,
+                            sourceUserProfilePicture: sourceUser.profilePicture
                         };
                     } catch (error) {
                         console.error(`Error fetching user for ID ${notification.sourceUserId}:`, error);
                         return {
                             ...notification,
-                            sourceUsername: notification.sourceUserId // fallback to userId if username fetch fails
+                            sourceUsername: notification.sourceUserId, // fallback to userId if username fetch fails
+                            sourceUserProfilePicture: undefined
                         };
                     }
                 })
             );
             
-            setNotifications(notificationsWithUsernames);
+            setNotifications(notificationsWithUserData);
             setLoading(false);
         } catch (error: any) {
             console.error('Error fetching notifications:', error);
@@ -103,16 +111,39 @@ const Notifications: React.FC = () => {
         
         try {
             await notificationService.markAllAsRead(userId);
+            // Update local state to mark all notifications as read
+            setNotifications(prev => 
+                prev.map(n => ({ ...n, read: true }))
+            );
         } catch (error) {
-            console.error('Error marking notifications as read:', error);
+            console.error('Error marking all notifications as read:', error);
         }
     };
 
-    const handleNotificationClick = (notification: NotificationWithUsername) => {
+    const handleNotificationClick = async (notification: NotificationWithUserData) => {
+        // Mark this specific notification as read when clicked
+        if (!notification.read) {
+            try {
+                await notificationService.markAsRead(notification.id);
+                // Update local state to reflect the notification as read
+                setNotifications(prev => 
+                    prev.map(n => 
+                        n.id === notification.id 
+                            ? { ...n, read: true }
+                            : n
+                    )
+                );
+            } catch (error) {
+                console.error('Error marking notification as read:', error);
+            }
+        }
+
+        // Navigate based on notification type
         switch (notification.type) {
             case 'LIKE':
             case 'COMMENT':
             case 'FRIEND_COMMENT':
+            case 'NEW_POST':
                 if (notification.postId) {
                     navigate(`/post/${notification.postId}`);
                 }
@@ -139,12 +170,14 @@ const Notifications: React.FC = () => {
                 return <FollowIcon sx={{ color: '#4caf50', fontSize: 20 }} />;
             case 'FRIEND_COMMENT':
                 return <FriendCommentIcon sx={{ color: '#ff9800', fontSize: 20 }} />;
+            case 'NEW_POST':
+                return <NewPostIcon sx={{ color: '#9c27b0', fontSize: 20 }} />;
             default:
                 return <UnreadIcon sx={{ color: '#9e9e9e', fontSize: 20 }} />;
         }
     };
 
-    const getNotificationContent = (notification: NotificationWithUsername): string => {
+    const getNotificationContent = (notification: NotificationWithUserData): string => {
         const username = notification.sourceUsername || notification.sourceUserId;
         
         switch (notification.type) {
@@ -156,12 +189,37 @@ const Notifications: React.FC = () => {
                 return `${username} started following you`;
             case 'FRIEND_COMMENT':
                 return `${username} commented on a post`;
+            case 'NEW_POST':
+                return `${username} shared a new post`;
             default:
                 return notification.content;
         }
     };
 
-    const getNotificationCardStyle = (notification: NotificationWithUsername, isHovered: boolean) => ({
+    const getUserAvatar = (notification: NotificationWithUserData) => {
+        const profilePicUrl = notification.sourceUserProfilePicture?.data 
+            ? `data:${notification.sourceUserProfilePicture.type};base64,${notification.sourceUserProfilePicture.data}`
+            : undefined;
+
+        return (
+            <Avatar
+                src={profilePicUrl}
+                alt={notification.sourceUsername}
+                sx={{
+                    width: 24,
+                    height: 24,
+                    fontSize: '0.75rem',
+                    bgcolor: theme.palette.mode === 'dark' ? '#404040' : '#e5e7eb',
+                    color: theme.palette.text.secondary,
+                    border: `1px solid ${theme.palette.mode === 'dark' ? '#606060' : '#d1d5db'}`,
+                }}
+            >
+                {!profilePicUrl && notification.sourceUsername ? notification.sourceUsername[0].toUpperCase() : '?'}
+            </Avatar>
+        );
+    };
+
+    const getNotificationCardStyle = (notification: NotificationWithUserData, isHovered: boolean) => ({
         backgroundColor: !notification.read ? 
             (theme.palette.mode === 'dark' ? '#1e3a8a' : '#eff6ff') : 
             theme.palette.background.paper,
@@ -270,7 +328,27 @@ const Notifications: React.FC = () => {
     return (
         <div style={containerStyle}>
             <div style={{ maxWidth: '600px' }}>
-                <h1 style={{ fontSize: '1.875rem', fontWeight: 'bold', color: theme.palette.text.primary, marginBottom: '32px' }}>Notifications</h1>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+                    <h1 style={{ fontSize: '1.875rem', fontWeight: 'bold', color: theme.palette.text.primary, margin: 0 }}>Notifications</h1>
+                    {notifications.some(n => !n.read) && (
+                        <Button
+                            startIcon={<MarkAllReadIcon />}
+                            onClick={markAllAsRead}
+                            variant="outlined"
+                            size="small"
+                            sx={{
+                                color: theme.palette.text.secondary,
+                                borderColor: theme.palette.mode === 'dark' ? '#404040' : '#e5e7eb',
+                                '&:hover': {
+                                    borderColor: theme.palette.mode === 'dark' ? '#606060' : '#9ca3af',
+                                    backgroundColor: theme.palette.mode === 'dark' ? 'rgba(64, 64, 64, 0.1)' : 'rgba(156, 163, 175, 0.1)',
+                                }
+                            }}
+                        >
+                            Mark all as read
+                        </Button>
+                    )}
+                </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-start' }}>
                     {notifications.map((notification) => (
                         <div
@@ -285,8 +363,16 @@ const Notifications: React.FC = () => {
                             onMouseLeave={() => setHoveredNotification(null)}
                         >
                             <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-                                <div style={{ flexShrink: 0, marginTop: '4px' }}>
+                                <div style={{ 
+                                    flexShrink: 0, 
+                                    display: 'flex', 
+                                    flexDirection: 'column', 
+                                    alignItems: 'center', 
+                                    gap: '4px',
+                                    marginTop: '4px'
+                                }}>
                                     {getNotificationIcon(notification.type)}
+                                    {getUserAvatar(notification)}
                                 </div>
                                 <div style={{ flex: 1, minWidth: 0 }}>
                                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>

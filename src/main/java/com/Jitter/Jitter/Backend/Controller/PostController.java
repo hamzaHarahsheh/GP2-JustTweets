@@ -2,8 +2,11 @@ package com.Jitter.Jitter.Backend.Controller;
 
 import com.Jitter.Jitter.Backend.Models.Media;
 import com.Jitter.Jitter.Backend.Models.Post;
+import com.Jitter.Jitter.Backend.Models.Follow;
 import com.Jitter.Jitter.Backend.Service.PostService;
 import com.Jitter.Jitter.Backend.Service.UserService;
+import com.Jitter.Jitter.Backend.Service.NotificationService;
+import com.Jitter.Jitter.Backend.Service.FollowService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -24,11 +27,16 @@ import java.util.List;
 public class PostController {
     private final PostService postService;
     private final UserService userService;
+    private final NotificationService notificationService;
+    private final FollowService followService;
 
     @Autowired
-    public PostController(PostService postService, UserService userService) {
+    public PostController(PostService postService, UserService userService, 
+                         NotificationService notificationService, FollowService followService) {
         this.postService = postService;
         this.userService = userService;
+        this.notificationService = notificationService;
+        this.followService = followService;
     }
 
     @GetMapping
@@ -62,6 +70,23 @@ public class PostController {
                     .orElseThrow(() -> new RuntimeException("User not found for username: " + username));
             post.setUserId(userId);
             Post savedPost = postService.createPost(post, images);
+            
+            // Create NEW_POST notifications for all followers
+            List<Follow> followers = followService.getFollowers(userId);
+            for (Follow follow : followers) {
+                // Don't send notification to the post creator themselves
+                if (!follow.getFollowerId().equals(userId)) {
+                    notificationService.createNotification(
+                        follow.getFollowerId(), 
+                        "NEW_POST", 
+                        userId, 
+                        savedPost.getId(), 
+                        null, 
+                        null
+                    );
+                }
+            }
+            
             return ResponseEntity.status(HttpStatus.CREATED).body(savedPost);
         } catch (IOException e) {
             throw new RuntimeException("Failed to process images", e);

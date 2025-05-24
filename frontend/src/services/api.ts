@@ -3,7 +3,7 @@ import { LoginCredentials, LoginResponse, RegisterCredentials, Post, Comment, Li
 
 interface Notification {
     id: string;
-    type: 'LIKE' | 'COMMENT' | 'FOLLOW' | 'FRIEND_COMMENT';
+    type: 'LIKE' | 'COMMENT' | 'FOLLOW' | 'FRIEND_COMMENT' | 'NEW_POST';
     sourceUserId: string;
     postId?: string;
     content: string;
