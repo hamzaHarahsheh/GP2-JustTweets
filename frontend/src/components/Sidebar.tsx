@@ -38,6 +38,15 @@ const Sidebar: React.FC = () => {
         }
     }, [userId]);
 
+    // Reset unread count when user visits notifications page
+    useEffect(() => {
+        if (location.pathname === '/notifications' && userId) {
+            setTimeout(() => {
+                fetchUnreadCount();
+            }, 1000); // Small delay to allow notifications to be marked as read
+        }
+    }, [location.pathname, userId]);
+
     const fetchUnreadCount = async () => {
         if (!userId) return;
         
@@ -47,6 +56,14 @@ const Sidebar: React.FC = () => {
         } catch (error) {
             console.error('Error fetching unread count:', error);
         }
+    };
+
+    const handleMenuItemClick = (path: string) => {
+        if (path === '/notifications' && unreadCount > 0) {
+            // Clear the badge immediately when clicking notifications
+            setUnreadCount(0);
+        }
+        navigate(path);
     };
 
     const menuItems = [
@@ -100,7 +117,7 @@ const Sidebar: React.FC = () => {
                     <ListItem disablePadding key={item.text}>
                         <ListItemButton
                             selected={isActive(item.path)}
-                            onClick={() => navigate(item.path)}
+                            onClick={() => handleMenuItemClick(item.path)}
                             sx={{
                                 borderRadius: 8,
                                 mb: 1,
