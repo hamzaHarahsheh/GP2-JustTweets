@@ -50,7 +50,6 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
                     System.out.println("Authentication set successfully for user: " + username);
                 } catch (Exception e) {
                     System.out.println("Failed to load user details for username: " + username + ", Error: " + e.getMessage());
-                    // Clear any existing authentication but continue with the request
                     SecurityContextHolder.clearContext();
                 }
             } else {

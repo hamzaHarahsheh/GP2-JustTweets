@@ -50,17 +50,13 @@ public class CommentController {
         comment.setCreatedAt(new Date());
         Comment saved = commentRepo.save(comment);
         
-        // Create notification for the post owner
         Post post = postRepository.findById(comment.getPostId()).orElse(null);
         if (post != null && !post.getUserId().equals(user.getId())) {
             notificationService.createNotification(post.getUserId(), "COMMENT", user.getId(), post.getId(), saved.getId(), null);
         }
         
-        // Create FRIEND_COMMENT notifications for all followers of the commenter
         List<Follow> followers = followService.getFollowers(user.getId());
         for (Follow follow : followers) {
-            // Don't send notification to the post owner (they already got a COMMENT notification)
-            // and don't send notification to the commenter themselves
             if (!follow.getFollowerId().equals(user.getId()) && 
                 (post == null || !follow.getFollowerId().equals(post.getUserId()))) {
                 notificationService.createNotification(

@@ -13,13 +13,11 @@ const ThemeContext = createContext<ThemeContextType>({ toggleTheme: () => {}, mo
 export const useThemeContext = () => useContext(ThemeContext);
 
 export const CustomThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    // Initialize theme from localStorage or default to 'light'
     const [mode, setMode] = useState<ThemeMode>(() => {
         const savedMode = localStorage.getItem('themeMode');
         return (savedMode as ThemeMode) || 'light';
     });
 
-    // Save theme preference to localStorage whenever it changes
     useEffect(() => {
         localStorage.setItem('themeMode', mode);
     }, [mode]);

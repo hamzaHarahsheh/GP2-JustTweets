@@ -21,7 +21,6 @@ import {
 } from '@mui/material';
 import { Edit as EditIcon } from '@mui/icons-material';
 
-// Lazy load components
 const Post = lazy(() => import('./Post'));
 const EditProfileDialog = lazy(() => import('./dialogs/EditProfileDialog'));
 const FollowersDialog = lazy(() => import('./dialogs/FollowersDialog'));
@@ -63,7 +62,6 @@ const Profile: React.FC = () => {
                 const postsData = await postService.getPostsByUserId(userData.id);
                 setPosts(postsData.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
                 setError(null);
-                // Check if current user is following this profile
                 if (currentUser && userData.id !== currentUser.id) {
                     const following = await userService.getFollowing(currentUser.id);
                     setIsFollowing(following.some(u => u.id === userData.id));
@@ -87,7 +85,7 @@ const Profile: React.FC = () => {
             const updatedUser = await userService.getUserByUsername(username || '');
             setProfileUser(updatedUser);
         } catch (error) {
-            // handle error
+            console.error('Error updating profile:', error);
         }
     };
 
@@ -102,15 +100,13 @@ const Profile: React.FC = () => {
                 await userService.followUser(profileUser.id);
                 setIsFollowing(true);
             }
-            // Always fetch the latest user data after follow/unfollow
             const updatedUser = await userService.getUserByUsername(username || '');
             setProfileUser(updatedUser);
-            // If current user, also update their state
             if (currentUser && currentUser.id === updatedUser.id) {
                 setUser(updatedUser);
             }
         } catch (err) {
-            // handle error
+            console.error('Error following/unfollowing user:', err);
         } finally {
             setFollowLoading(false);
         }
@@ -169,7 +165,6 @@ const Profile: React.FC = () => {
                 minHeight: '70vh',
             }}
         >
-            {/* Profile Header */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, mb: 3 }}>
                 <Avatar
                     src={profilePicUrl}
@@ -236,7 +231,6 @@ const Profile: React.FC = () => {
 
             <Divider sx={{ my: 3 }} />
 
-            {/* Posts Section */}
             <Typography variant="h5" fontWeight={600} sx={{ mb: 2 }}>
                 Posts
             </Typography>
@@ -252,7 +246,6 @@ const Profile: React.FC = () => {
                 </Suspense>
             )}
 
-            {/* Edit Profile Dialog */}
             <Suspense fallback={null}>
                 <EditProfileDialog
                     open={editDialogOpen}
@@ -266,7 +259,6 @@ const Profile: React.FC = () => {
                 />
             </Suspense>
 
-            {/* Profile Picture Dialog */}
             <Dialog
                 open={pictureDialogOpen}
                 onClose={() => setPictureDialogOpen(false)}
@@ -309,7 +301,6 @@ const Profile: React.FC = () => {
                 </Box>
             </Dialog>
 
-            {/* Followers Dialog */}
             <Suspense fallback={null}>
                 <FollowersDialog
                     open={followersDialogOpen}
@@ -319,7 +310,6 @@ const Profile: React.FC = () => {
                 />
             </Suspense>
 
-            {/* Following Dialog */}
             <Suspense fallback={null}>
                 <FollowingDialog
                     open={followingDialogOpen}

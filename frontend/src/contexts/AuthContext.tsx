@@ -65,7 +65,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setLoading(true);
             setError(null);
             await authService.register({ username, email, password, bio, profilePicture });
-            // Auto-login after registration
             await login(username, password);
         } catch (err) {
             setError('Registration failed');

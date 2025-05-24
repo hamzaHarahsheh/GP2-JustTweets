@@ -61,7 +61,6 @@ const Notifications: React.FC = () => {
             
             const paginatedData = await notificationService.getUserNotificationsPaginated(userId, page, NOTIFICATIONS_PER_PAGE);
             
-            // Fetch usernames and profile pictures for each notification
             const notificationsWithUserData = await Promise.all(
                 paginatedData.content.map(async (notification) => {
                     try {
@@ -406,7 +405,6 @@ const Notifications: React.FC = () => {
                     ))}
                 </div>
 
-                {/* Load More Button */}
                 {hasMore && (
                     <div style={{ display: 'flex', justifyContent: 'center', marginTop: '24px' }}>
                         <Button
@@ -428,7 +426,6 @@ const Notifications: React.FC = () => {
                     </div>
                 )}
 
-                {/* Pagination Info */}
                 {notifications.length > 0 && (
                     <div style={{ 
                         textAlign: 'center', 

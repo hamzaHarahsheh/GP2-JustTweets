@@ -71,10 +71,8 @@ public class PostController {
             post.setUserId(userId);
             Post savedPost = postService.createPost(post, images);
             
-            // Create NEW_POST notifications for all followers
             List<Follow> followers = followService.getFollowers(userId);
             for (Follow follow : followers) {
-                // Don't send notification to the post creator themselves
                 if (!follow.getFollowerId().equals(userId)) {
                     notificationService.createNotification(
                         follow.getFollowerId(), 

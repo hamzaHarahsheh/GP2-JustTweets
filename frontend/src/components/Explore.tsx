@@ -5,7 +5,6 @@ import { userService } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { User } from '../types';
 
-// Mock data types
 interface Trend {
     id: string;
     hashtag: string;
@@ -31,7 +30,6 @@ interface TopTweet {
     media?: string;
 }
 
-// Mock data
 const mockTrends: Trend[] = [
     { id: '1', hashtag: 'ReactJS', tweetCount: 12500, category: 'Technology' },
     { id: '2', hashtag: 'OpenAI', tweetCount: 8900, category: 'Technology' },
@@ -154,7 +152,6 @@ const Explore: React.FC = () => {
 
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            {/* Search Bar */}
             <div className="relative mb-8">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <Search className="h-5 w-5 text-gray-400" />
@@ -176,7 +173,6 @@ const Explore: React.FC = () => {
                 )}
             </div>
 
-            {/* Search Results */}
             {searchQuery && (
                 <div className="mb-8 bg-white rounded-xl shadow-sm p-6">
                     <h2 className="text-xl font-bold mb-4">Search Results</h2>
@@ -228,9 +224,7 @@ const Explore: React.FC = () => {
             )}
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Main Content */}
                 <div className="lg:col-span-2 space-y-8">
-                    {/* Categories */}
                     <div className="flex space-x-4 overflow-x-auto pb-2">
                         {categories.map((category) => (
                             <button
@@ -247,7 +241,6 @@ const Explore: React.FC = () => {
                         ))}
                     </div>
 
-                    {/* Trending Topics */}
                     <div className="bg-white rounded-xl shadow-sm p-6">
                         <div className="flex items-center mb-4">
                             <TrendingUp className="h-5 w-5 text-blue-500 mr-2" />
@@ -267,7 +260,6 @@ const Explore: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Top Tweets */}
                     <div className="bg-white rounded-xl shadow-sm p-6">
                         <h2 className="text-xl font-bold mb-4">Top Tweets</h2>
                         <div className="space-y-6">
@@ -314,9 +306,7 @@ const Explore: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Sidebar */}
                 <div className="space-y-8">
-                    {/* Suggested Users */}
                     <div className="bg-white rounded-xl shadow-sm p-6">
                         <div className="flex items-center mb-4">
                             <Users className="h-5 w-5 text-blue-500 mr-2" />
@@ -344,7 +334,6 @@ const Explore: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Media Gallery */}
                     <div className="bg-white rounded-xl shadow-sm p-6">
                         <div className="flex items-center mb-4">
                             <ImageIcon className="h-5 w-5 text-blue-500 mr-2" />

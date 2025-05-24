@@ -46,7 +46,7 @@ const PostDetail: React.FC = () => {
     const containerStyle = {
         position: 'fixed' as const,
         top: '0',
-        left: '260px', // Right after the sidebar
+        left: '260px', 
         width: 'calc(100vw - 260px)',
         height: '100vh',
         backgroundColor: theme.palette.background.default,

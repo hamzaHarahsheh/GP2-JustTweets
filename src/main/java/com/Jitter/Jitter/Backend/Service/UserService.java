@@ -58,14 +58,13 @@ public class UserService {
 
             return userRepository.save(user);
         } catch (DuplicateKeyException e) {
-            // If we get a duplicate key error, check which field caused it
             if (userRepository.findByUsername(user.getUsername()).isPresent()) {
                 throw new RuntimeException("Username already exists");
             }
             if (userRepository.findByEmail(user.getEmail()).isPresent()) {
                 throw new RuntimeException("Email already exists");
             }
-            throw e; // If it's some other duplicate key error
+            throw e;
         }
     }
 
@@ -150,9 +149,7 @@ public class UserService {
     }
 
     public boolean followUser(String followerId, String followingId) {
-        // Prevent self-follow
         if (followerId.equals(followingId)) return false;
-        // Check if already following
         List<Follow> existing = followService.getFollowing(followerId);
         boolean alreadyFollowing = existing.stream().anyMatch(f -> f.getFollowingId().equals(followingId));
         if (alreadyFollowing) return false;

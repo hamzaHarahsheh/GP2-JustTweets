@@ -16,7 +16,6 @@ public class UserDTO {
     private Object profilePicture;
     private int followers;
     private int following;
-    // Add other fields as needed
 
     public UserDTO(User user, int followers, int following) {
         this.id = user.getId();

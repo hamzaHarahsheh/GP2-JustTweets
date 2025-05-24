@@ -14,7 +14,6 @@ public interface NotificationRepository extends MongoRepository<Notification, St
     List<Notification> findByUserIdAndReadFalse(String userId);
     long countByUserIdAndReadFalse(String userId);
     
-    // Pagination methods
     Page<Notification> findByUserIdOrderByCreatedAtDesc(String userId, Pageable pageable);
     long countByUserId(String userId);
 } 

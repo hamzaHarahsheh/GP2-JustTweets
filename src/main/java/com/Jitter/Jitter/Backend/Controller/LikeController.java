@@ -62,7 +62,6 @@ public class LikeController {
         likeRepo.deleteById(id);
     }
 
-    // Notification endpoints added as workaround
     @GetMapping("/notifications/test")
     public String testNotificationEndpoint() {
         return "Notification endpoints working via LikeController!";

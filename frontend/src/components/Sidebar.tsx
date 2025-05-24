@@ -38,12 +38,11 @@ const Sidebar: React.FC = () => {
         }
     }, [userId]);
 
-    // Reset unread count when user visits notifications page
     useEffect(() => {
         if (location.pathname === '/notifications' && userId) {
             setTimeout(() => {
                 fetchUnreadCount();
-            }, 1000); // Small delay to allow notifications to be marked as read
+            }, 1000); 
         }
     }, [location.pathname, userId]);
 
@@ -60,7 +59,6 @@ const Sidebar: React.FC = () => {
 
     const handleMenuItemClick = (path: string) => {
         if (path === '/notifications' && unreadCount > 0) {
-            // Clear the badge immediately when clicking notifications
             setUnreadCount(0);
         }
         navigate(path);

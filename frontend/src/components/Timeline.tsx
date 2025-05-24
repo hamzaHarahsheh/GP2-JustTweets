@@ -26,17 +26,12 @@ const Timeline: React.FC = () => {
         const fetchPosts = async () => {
             try {
                 if (!user) return;
-                // Get following list (user objects)
                 const followingList: User[] = await userService.getFollowing(user.id);
                 setFollowing(followingList);
                 setFollowingIds(new Set(followingList.map(u => u.id)));
-                // Include current user id
                 const allowedUserIds = new Set([user.id, ...followingList.map(u => u.id)]);
-                // Fetch all posts
                 const data = await postService.getAllPosts();
-                // Filter posts by allowed user ids
                 const filtered = data.filter(post => allowedUserIds.has(post.userId));
-                // Sort posts by createdAt (most recent first)
                 filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
                 setPosts(filtered);
                 setError(null);
@@ -50,7 +45,6 @@ const Timeline: React.FC = () => {
         fetchPosts();
     }, [user]);
 
-    // User search logic
     useEffect(() => {
         if (!searchQuery.trim()) {
             setSearchResults([]);
@@ -92,7 +86,7 @@ const Timeline: React.FC = () => {
                 }
             }
         } catch (err) {
-            // Optionally show error
+            console.error('Error following/unfollowing user:', err);
         }
     };
 
@@ -118,7 +112,6 @@ const Timeline: React.FC = () => {
 
     return (
         <Box>
-            {/* User Search Bar */}
             <Box sx={{ mb: 3 }}>
                 <TextField
                     fullWidth
