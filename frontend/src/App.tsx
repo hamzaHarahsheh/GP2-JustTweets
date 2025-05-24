@@ -8,6 +8,7 @@ const Sidebar = lazy(() => import('./components/Sidebar'));
 const Timeline = lazy(() => import('./components/Timeline'));
 const Profile = lazy(() => import('./components/Profile'));
 const Explore = lazy(() => import('./components/Explore'));
+const Notifications = lazy(() => import('./components/Notifications'));
 const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
 
@@ -65,6 +66,14 @@ const AppLayout: React.FC = () => {
               element={
                 <PrivateRoute>
                   <Explore />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/notifications"
+              element={
+                <PrivateRoute>
+                  <Notifications />
                 </PrivateRoute>
               }
             />

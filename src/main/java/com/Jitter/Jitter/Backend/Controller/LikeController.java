@@ -1,6 +1,7 @@
 package com.Jitter.Jitter.Backend.Controller;
 
 import com.Jitter.Jitter.Backend.Models.Like;
+import com.Jitter.Jitter.Backend.Models.Notification;
 import com.Jitter.Jitter.Backend.Repository.LikeRepository;
 import com.Jitter.Jitter.Backend.Service.NotificationService;
 import com.Jitter.Jitter.Backend.Repository.PostRepository;
@@ -58,5 +59,31 @@ public class LikeController {
     @DeleteMapping("/{id}")
     public void deleteLike(@PathVariable String id) {
         likeRepo.deleteById(id);
+    }
+
+    // Notification endpoints added as workaround
+    @GetMapping("/notifications/test")
+    public String testNotificationEndpoint() {
+        return "Notification endpoints working via LikeController!";
+    }
+
+    @GetMapping("/notifications/user/{userId}")
+    public List<Notification> getUserNotifications(@PathVariable String userId) {
+        return notificationService.getUserNotifications(userId);
+    }
+
+    @GetMapping("/notifications/unread/count/{userId}")
+    public Long getUnreadNotificationCount(@PathVariable String userId) {
+        return notificationService.getUnreadNotificationCount(userId);
+    }
+
+    @PutMapping("/notifications/read/{notificationId}")
+    public void markNotificationAsRead(@PathVariable String notificationId) {
+        notificationService.markNotificationAsRead(notificationId);
+    }
+
+    @PutMapping("/notifications/read/all/{userId}")
+    public void markAllNotificationsAsRead(@PathVariable String userId) {
+        notificationService.markAllNotificationsAsRead(userId);
     }
 }

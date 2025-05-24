@@ -1,6 +1,16 @@
 import axios from 'axios';
 import { LoginCredentials, LoginResponse, RegisterCredentials, Post, Comment, Like, User } from '../types';
 
+interface Notification {
+    id: string;
+    type: 'LIKE' | 'COMMENT' | 'FOLLOW' | 'FRIEND_COMMENT';
+    sourceUserId: string;
+    postId?: string;
+    content: string;
+    read: boolean;
+    createdAt: string;
+}
+
 const API_URL = 'http://localhost:8081';
 
 const api = axios.create({
@@ -143,6 +153,26 @@ export const userService = {
     unfollowUser: async (userId: string) => {
         const response = await api.post(`/users/unfollow/${userId}`);
         return response.data;
+    },
+};
+
+export const notificationService = {
+    getUserNotifications: async (userId: string): Promise<Notification[]> => {
+        const response = await api.get<Notification[]>(`/likes/notifications/user/${userId}`);
+        return response.data;
+    },
+
+    getUnreadCount: async (userId: string): Promise<number> => {
+        const response = await api.get<number>(`/likes/notifications/unread/count/${userId}`);
+        return response.data;
+    },
+
+    markAsRead: async (notificationId: string): Promise<void> => {
+        await api.put(`/likes/notifications/read/${notificationId}`);
+    },
+
+    markAllAsRead: async (userId: string): Promise<void> => {
+        await api.put(`/likes/notifications/read/all/${userId}`);
     },
 };
 

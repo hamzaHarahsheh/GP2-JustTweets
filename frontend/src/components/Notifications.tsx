@@ -1,28 +1,60 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
+import { useAuth } from '../contexts/AuthContext';
+import { notificationService } from '../services/api';
 
-const Notifications = () => {
-    const [notifications, setNotifications] = useState([]);
+interface Notification {
+    id: string;
+    type: 'LIKE' | 'COMMENT' | 'FOLLOW' | 'FRIEND_COMMENT';
+    sourceUserId: string;
+    postId?: string;
+    content: string;
+    read: boolean;
+    createdAt: string;
+}
+
+const Notifications: React.FC = () => {
+    const [notifications, setNotifications] = useState<Notification[]>([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+    const [error, setError] = useState<string | null>(null);
     const [notFound, setNotFound] = useState(false);
     const navigate = useNavigate();
-    const userId = localStorage.getItem('userId');
+    const { user } = useAuth();
+    const userId = user?.id;
 
     useEffect(() => {
-        fetchNotifications();
-    }, []);
+        if (userId) {
+            fetchNotifications();
+        }
+    }, [userId]);
 
     const fetchNotifications = async () => {
-        try {
-            const response = await axios.get(`http://localhost:8080/api/notifications/user/${userId}`);
-            setNotifications(response.data);
+        if (!userId) {
+            setError('User not authenticated');
             setLoading(false);
-        } catch (error) {
-            if (error.response && error.response.status === 404) {
-                setNotFound(true);
+            return;
+        }
+
+        try {
+            setError(null); // Clear any previous errors
+            const notifications = await notificationService.getUserNotifications(userId);
+            setNotifications(notifications);
+            setLoading(false);
+        } catch (error: any) {
+            console.error('Error fetching notifications:', error);
+            if (error.response) {
+                if (error.response.status === 404) {
+                    setNotFound(true);
+                } else if (error.response.status === 401) {
+                    setError('Authentication required. Please log in again.');
+                } else if (error.response.status === 500) {
+                    setError('Server error. Please try again later.');
+                } else {
+                    setError(`Error: ${error.response.status}. Please try again later.`);
+                }
+            } else if (error.request) {
+                setError('Unable to connect to server. Please check your internet connection.');
             } else {
                 setError('Unable to load notifications at this time. Please try again later.');
             }
@@ -30,13 +62,13 @@ const Notifications = () => {
         }
     };
 
-    const handleNotificationClick = (notification) => {
+    const handleNotificationClick = (notification: Notification) => {
         if (notification.postId) {
             navigate(`/post/${notification.postId}`);
         }
     };
 
-    const getNotificationContent = (notification) => {
+    const getNotificationContent = (notification: Notification): string => {
         switch (notification.type) {
             case 'LIKE':
                 return `${notification.sourceUserId} liked your post`;

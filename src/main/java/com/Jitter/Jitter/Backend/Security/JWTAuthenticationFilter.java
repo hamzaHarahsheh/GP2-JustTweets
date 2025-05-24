@@ -32,20 +32,36 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
             return;
         }
-        String token = getJWTFromRequest(request);
-        System.out.println("JWT Token received: " + token);
-        if(token != null && jwtGenerator.validateToken(token)) {
-            System.out.println("JWT Token is valid");
-            String username = jwtGenerator.getUsernameFromJWT(token);
-            System.out.println("Username from JWT: " + username);
-            UserDetails userDetails = customeUserDetailsService.loadUserByUsername(username);
-            UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
-                    userDetails, null, userDetails.getAuthorities());
-            authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-            SecurityContextHolder.getContext().setAuthentication(authenticationToken);
-        } else {
-            System.out.println("JWT Token is invalid or missing");
+        
+        try {
+            String token = getJWTFromRequest(request);
+            System.out.println("JWT Token received: " + token);
+            if(token != null && jwtGenerator.validateToken(token)) {
+                System.out.println("JWT Token is valid");
+                String username = jwtGenerator.getUsernameFromJWT(token);
+                System.out.println("Username from JWT: " + username);
+                
+                try {
+                    UserDetails userDetails = customeUserDetailsService.loadUserByUsername(username);
+                    UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
+                            userDetails, null, userDetails.getAuthorities());
+                    authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+                    System.out.println("Authentication set successfully for user: " + username);
+                } catch (Exception e) {
+                    System.out.println("Failed to load user details for username: " + username + ", Error: " + e.getMessage());
+                    // Clear any existing authentication but continue with the request
+                    SecurityContextHolder.clearContext();
+                }
+            } else {
+                System.out.println("JWT Token is invalid or missing");
+                SecurityContextHolder.clearContext();
+            }
+        } catch (Exception e) {
+            System.out.println("Error in JWT filter: " + e.getMessage());
+            SecurityContextHolder.clearContext();
         }
+        
         filterChain.doFilter(request, response);
     }
 

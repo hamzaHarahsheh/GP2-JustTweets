@@ -4,12 +4,16 @@ import com.Jitter.Jitter.Backend.Models.Notification;
 import com.Jitter.Jitter.Backend.Repository.NotificationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Date;
 import java.util.List;
 
 @Service
 public class NotificationService {
+    private static final Logger logger = LoggerFactory.getLogger(NotificationService.class);
+    
     @Autowired
     private NotificationRepository notificationRepository;
 
@@ -27,12 +31,27 @@ public class NotificationService {
     }
 
     public List<Notification> getUserNotifications(String userId) {
-        List<Notification> notifications = notificationRepository.findByUserIdOrderByCreatedAtDesc(userId);
-        return notifications != null ? notifications : java.util.Collections.emptyList();
+        try {
+            logger.info("Service: Fetching notifications for userId: {}", userId);
+            List<Notification> notifications = notificationRepository.findByUserIdOrderByCreatedAtDesc(userId);
+            logger.info("Service: Found {} notifications for userId: {}", notifications != null ? notifications.size() : 0, userId);
+            return notifications != null ? notifications : java.util.Collections.emptyList();
+        } catch (Exception e) {
+            logger.error("Service: Error fetching notifications for userId: {}", userId, e);
+            throw e;
+        }
     }
 
     public long getUnreadNotificationCount(String userId) {
-        return notificationRepository.countByUserIdAndReadFalse(userId);
+        try {
+            logger.info("Service: Fetching unread count for userId: {}", userId);
+            long count = notificationRepository.countByUserIdAndReadFalse(userId);
+            logger.info("Service: Found {} unread notifications for userId: {}", count, userId);
+            return count;
+        } catch (Exception e) {
+            logger.error("Service: Error fetching unread count for userId: {}", userId, e);
+            throw e;
+        }
     }
 
     public void markNotificationAsRead(String notificationId) {
@@ -46,5 +65,17 @@ public class NotificationService {
         List<Notification> notifications = notificationRepository.findByUserIdAndReadFalse(userId);
         notifications.forEach(notification -> notification.setRead(true));
         notificationRepository.saveAll(notifications);
+    }
+
+    public long getTotalNotificationCount() {
+        try {
+            logger.info("Service: Getting total notification count");
+            long count = notificationRepository.count();
+            logger.info("Service: Total notifications in database: {}", count);
+            return count;
+        } catch (Exception e) {
+            logger.error("Service: Error getting total count", e);
+            throw e;
+        }
     }
 } 

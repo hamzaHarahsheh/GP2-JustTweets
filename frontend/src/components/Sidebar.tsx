@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { notificationService } from '../services/api';
 import {
     Home as HomeIcon,
     Explore as ExploreIcon,
@@ -18,6 +19,7 @@ import {
     Avatar,
     Typography,
     Dialog,
+    Badge,
 } from '@mui/material';
 
 const Sidebar: React.FC = () => {
@@ -25,11 +27,42 @@ const Sidebar: React.FC = () => {
     const location = useLocation();
     const { user, logout } = useAuth();
     const [dialogOpen, setDialogOpen] = useState(false);
+    const [unreadCount, setUnreadCount] = useState(0);
+    const userId = user?.id;
+
+    useEffect(() => {
+        if (userId) {
+            fetchUnreadCount();
+            const interval = setInterval(fetchUnreadCount, 30000);
+            return () => clearInterval(interval);
+        }
+    }, [userId]);
+
+    const fetchUnreadCount = async () => {
+        if (!userId) return;
+        
+        try {
+            const unreadCount = await notificationService.getUnreadCount(userId);
+            setUnreadCount(unreadCount);
+        } catch (error) {
+            console.error('Error fetching unread count:', error);
+        }
+    };
 
     const menuItems = [
         { text: 'Home', icon: <HomeIcon />, path: '/' },
         { text: 'Explore', icon: <ExploreIcon />, path: '/explore' },
-        { text: 'Notifications', icon: <NotificationsIcon />, path: '/notifications' },
+        { 
+            text: 'Notifications', 
+            icon: unreadCount > 0 ? (
+                <Badge badgeContent={unreadCount} color="error">
+                    <NotificationsIcon />
+                </Badge>
+            ) : (
+                <NotificationsIcon />
+            ), 
+            path: '/notifications' 
+        },
         { text: 'Profile', icon: <PersonIcon />, path: `/profile/${user?.username}` },
     ];
 
@@ -40,12 +73,10 @@ const Sidebar: React.FC = () => {
 
     const profilePicUrl = user?.profilePicture?.data ? `data:${user.profilePicture.type};base64,${user.profilePicture.data}` : undefined;
 
-    // Helper to check if a route is active
     const isActive = (path: string) => location.pathname === path;
 
     return (
         <Box sx={{ width: 260, bgcolor: 'background.paper', minHeight: '100vh', p: 2 }}>
-            {/* User info/header (not a nav item) */}
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 4 }}>
                 <Avatar
                     src={profilePicUrl}
