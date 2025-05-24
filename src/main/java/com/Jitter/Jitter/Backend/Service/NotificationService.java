@@ -4,28 +4,47 @@ import com.Jitter.Jitter.Backend.Models.Notification;
 import com.Jitter.Jitter.Backend.Repository.NotificationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class NotificationService {
-
     @Autowired
-    private final NotificationRepository notificationRepository;
+    private NotificationRepository notificationRepository;
 
-    public NotificationService(NotificationRepository notificationRepository) {
-        this.notificationRepository = notificationRepository;
-    }
-
-    public List<Notification> getByUserId(String userId) {
-        return notificationRepository.findByUserId(userId);
-    }
-
-    public Notification save(Notification notification) {
+    public Notification createNotification(String userId, String type, String sourceUserId, String postId, String commentId, String content) {
+        Notification notification = new Notification();
+        notification.setUserId(userId);
+        notification.setType(type);
+        notification.setSourceUserId(sourceUserId);
+        notification.setPostId(postId);
+        notification.setCommentId(commentId);
+        notification.setContent(content);
+        notification.setRead(false);
+        notification.setCreatedAt(new Date());
         return notificationRepository.save(notification);
     }
 
-    public void delete(String id) {
-        notificationRepository.deleteById(id);
+    public List<Notification> getUserNotifications(String userId) {
+        List<Notification> notifications = notificationRepository.findByUserIdOrderByCreatedAtDesc(userId);
+        return notifications != null ? notifications : java.util.Collections.emptyList();
     }
-}
+
+    public long getUnreadNotificationCount(String userId) {
+        return notificationRepository.countByUserIdAndReadFalse(userId);
+    }
+
+    public void markNotificationAsRead(String notificationId) {
+        notificationRepository.findById(notificationId).ifPresent(notification -> {
+            notification.setRead(true);
+            notificationRepository.save(notification);
+        });
+    }
+
+    public void markAllNotificationsAsRead(String userId) {
+        List<Notification> notifications = notificationRepository.findByUserIdAndReadFalse(userId);
+        notifications.forEach(notification -> notification.setRead(true));
+        notificationRepository.saveAll(notifications);
+    }
+} 

@@ -2,6 +2,9 @@ package com.Jitter.Jitter.Backend.Controller;
 
 import com.Jitter.Jitter.Backend.Models.Like;
 import com.Jitter.Jitter.Backend.Repository.LikeRepository;
+import com.Jitter.Jitter.Backend.Service.NotificationService;
+import com.Jitter.Jitter.Backend.Repository.PostRepository;
+import com.Jitter.Jitter.Backend.Models.Post;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,9 +18,20 @@ public class LikeController {
     @Autowired
     private LikeRepository likeRepo;
 
+    @Autowired
+    private NotificationService notificationService;
+
+    @Autowired
+    private PostRepository postRepository;
+
     @PostMapping("/add")
     public Like addLike(@RequestBody Like like) {
-        return likeRepo.save(like);
+        Like savedLike = likeRepo.save(like);
+        Post post = postRepository.findById(like.getPostId()).orElse(null);
+        if (post != null && !post.getUserId().equals(like.getUserId())) {
+            notificationService.createNotification(post.getUserId(), "LIKE", like.getUserId(), post.getId(), null, null);
+        }
+        return savedLike;
     }
 
     @GetMapping("/{id}")

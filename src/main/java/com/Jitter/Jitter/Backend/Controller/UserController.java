@@ -25,6 +25,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.Jitter.Jitter.Backend.Models.Follow;
 import java.security.Principal;
 import com.Jitter.Jitter.Backend.DTO.UserDTO;
+import com.Jitter.Jitter.Backend.Service.NotificationService;
 
 @RestController
 @RequestMapping("/users")
@@ -43,6 +44,8 @@ public class UserController {
     private JWTGenerator jwtGenerator;
     @Autowired
     private ObjectMapper objectMapper;
+    @Autowired
+    private NotificationService notificationService;
 
     @GetMapping
     public List<User> getAllUsers() {
@@ -210,6 +213,7 @@ public class UserController {
         if (!success) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body("Already following");
         }
+        notificationService.createNotification(userId, "FOLLOW", follower.getId(), null, null, null);
         int followersCount = userService.getFollowers(userId).size();
         int followingCount = userService.getFollowing(follower.getId()).size();
         return ResponseEntity.ok(new java.util.HashMap<>() {{

@@ -19,6 +19,7 @@
     "@types/react-router-dom": "^5.3.3",
     "axios": "^1.9.0",
     "crypto-browserify": "^3.12.1",
+    "date-fns": "^4.1.0",
     "https-browserify": "^1.0.0",
     "lucide-react": "^0.509.0",
     "react": "^19.1.0",

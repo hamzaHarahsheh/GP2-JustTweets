@@ -20,6 +20,9 @@ public class Notification {
     private String userId;
     private String type;
     private String sourceUserId;
-
+    private String postId;
+    private String commentId;
+    private String content;
+    private boolean read;
     private Date createdAt;
 }

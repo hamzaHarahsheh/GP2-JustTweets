@@ -4,7 +4,6 @@ import { Box, CssBaseline, CircularProgress, Typography } from '@mui/material';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { CustomThemeProvider, useThemeContext } from './contexts/ThemeContext';
 
-// Lazy load components
 const Sidebar = lazy(() => import('./components/Sidebar'));
 const Timeline = lazy(() => import('./components/Timeline'));
 const Profile = lazy(() => import('./components/Profile'));
@@ -28,7 +27,6 @@ const LoadingFallback = () => (
   </Box>
 );
 
-// New component to handle layout
 const AppLayout: React.FC = () => {
   const location = useLocation();
   const { user } = useAuth();
@@ -77,10 +75,6 @@ const AppLayout: React.FC = () => {
                   <Profile />
                 </PrivateRoute>
               }
-            />
-            <Route
-              path="*"
-              element={<Typography>404 Not Found</Typography>}
             />
           </Routes>
         </Suspense>
