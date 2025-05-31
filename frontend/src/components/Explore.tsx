@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { userService, postService } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -9,6 +9,8 @@ import { useTheme } from '@mui/material/styles';
 import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
 
+const POSTS_PER_PAGE = 10;
+
 const Explore: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState<User[]>([]);
@@ -17,29 +19,69 @@ const Explore: React.FC = () => {
     const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
     const [posts, setPosts] = useState<PostType[]>([]);
     const [postsLoading, setPostsLoading] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
     const [postsError, setPostsError] = useState<string | null>(null);
+    const [hasMorePosts, setHasMorePosts] = useState(true);
+    const [currentPage, setCurrentPage] = useState(0);
     const navigate = useNavigate();
     const { user } = useAuth();
     const theme = useTheme();
 
-    useEffect(() => {
-        const fetchPosts = async () => {
-            try {
+    const fetchPosts = useCallback(async (page: number = 0, reset: boolean = false) => {
+        try {
+            if (reset) {
                 setPostsLoading(true);
-                const allPosts = await postService.getAllPosts();
-                allPosts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-                setPosts(allPosts);
-                setPostsError(null);
-            } catch (error) {
-                console.error('Failed to fetch posts:', error);
-                setPostsError('Failed to load posts');
-            } finally {
-                setPostsLoading(false);
+                setPosts([]);
+            } else {
+                setLoadingMore(true);
+            }
+
+            const allPosts = await postService.getAllPosts();
+            allPosts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+            
+            const startIndex = page * POSTS_PER_PAGE;
+            const endIndex = startIndex + POSTS_PER_PAGE;
+            const newPosts = allPosts.slice(startIndex, endIndex);
+            
+            if (reset) {
+                setPosts(newPosts);
+            } else {
+                setPosts(prev => [...prev, ...newPosts]);
+            }
+            
+            setHasMorePosts(endIndex < allPosts.length);
+            setPostsError(null);
+        } catch (error) {
+            console.error('Failed to fetch posts:', error);
+            setPostsError('Failed to load posts');
+        } finally {
+            setPostsLoading(false);
+            setLoadingMore(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchPosts(0, true);
+    }, [fetchPosts]);
+
+    useEffect(() => {
+        const handleScroll = () => {
+            if (
+                window.innerHeight + document.documentElement.scrollTop
+                >= document.documentElement.offsetHeight - 1000 &&
+                !loadingMore &&
+                hasMorePosts &&
+                !postsLoading
+            ) {
+                const nextPage = currentPage + 1;
+                setCurrentPage(nextPage);
+                fetchPosts(nextPage, false);
             }
         };
 
-        fetchPosts();
-    }, []);
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, [loadingMore, hasMorePosts, postsLoading, currentPage, fetchPosts]);
 
     useEffect(() => {
         if (!searchQuery.trim()) {
@@ -84,6 +126,11 @@ const Explore: React.FC = () => {
         } catch (err) {
             console.error('Error following/unfollowing user:', err);
         }
+    };
+
+    const handleRefresh = () => {
+        setCurrentPage(0);
+        fetchPosts(0, true);
     };
 
     return (
@@ -291,17 +338,36 @@ const Explore: React.FC = () => {
                         p: 3
                     }}
                 >
-                    <Typography variant="h5" fontWeight="700" sx={{ 
-                        mb: 3,
-                        background: 'linear-gradient(45deg, #1DA1F2 30%, #1976d2 90%)',
-                        backgroundClip: 'text',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent'
-                    }}>
-                        Explore Posts
-                    </Typography>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                        <Typography variant="h5" fontWeight="700" sx={{ 
+                            background: 'linear-gradient(45deg, #1DA1F2 30%, #1976d2 90%)',
+                            backgroundClip: 'text',
+                            WebkitBackgroundClip: 'text',
+                            WebkitTextFillColor: 'transparent'
+                        }}>
+                            Explore Posts
+                        </Typography>
+                        <Button 
+                            onClick={handleRefresh}
+                            disabled={postsLoading}
+                            sx={{
+                                borderRadius: 20,
+                                px: 3,
+                                textTransform: 'none',
+                                fontWeight: 600,
+                                background: 'linear-gradient(45deg, #1DA1F2 30%, #1976d2 90%)',
+                                color: 'white',
+                                '&:hover': {
+                                    transform: 'translateY(-2px)',
+                                    boxShadow: '0 4px 12px rgba(29, 161, 242, 0.3)'
+                                }
+                            }}
+                        >
+                            {postsLoading ? 'Refreshing...' : 'Refresh'}
+                        </Button>
+                    </Box>
                     
-                    {postsLoading ? (
+                    {postsLoading && posts.length === 0 ? (
                         <Box sx={{ 
                             display: 'flex', 
                             justifyContent: 'center', 
@@ -326,9 +392,17 @@ const Explore: React.FC = () => {
                             <Typography color="error" variant="h6" gutterBottom>
                                 Oops! Something went wrong
                             </Typography>
-                            <Typography color="text.secondary">
+                            <Typography color="text.secondary" gutterBottom>
                                 {postsError}
                             </Typography>
+                            <Button 
+                                onClick={handleRefresh}
+                                variant="outlined"
+                                color="primary"
+                                sx={{ mt: 2 }}
+                            >
+                                Try Again
+                            </Button>
                         </Box>
                     ) : posts.length === 0 ? (
                         <Box sx={{ 
@@ -352,7 +426,7 @@ const Explore: React.FC = () => {
                                     key={post.id}
                                     sx={{
                                         opacity: 0,
-                                        animation: `fadeInUp 0.6s ease-out ${index * 0.1}s forwards`,
+                                        animation: `fadeInUp 0.6s ease-out ${index * 0.05}s forwards`,
                                         '@keyframes fadeInUp': {
                                             from: {
                                                 opacity: 0,
@@ -368,6 +442,41 @@ const Explore: React.FC = () => {
                                     <Post post={post} />
                                 </Box>
                             ))}
+                            
+                            {loadingMore && (
+                                <Box sx={{ 
+                                    display: 'flex', 
+                                    justifyContent: 'center', 
+                                    alignItems: 'center', 
+                                    py: 4,
+                                    gap: 2
+                                }}>
+                                    <CircularProgress size={32} thickness={4} />
+                                    <Typography variant="body2" color="text.secondary">
+                                        Loading more posts...
+                                    </Typography>
+                                </Box>
+                            )}
+                            
+                            {!hasMorePosts && posts.length > 0 && (
+                                <Box sx={{ 
+                                    p: 4, 
+                                    textAlign: 'center',
+                                    background: theme.palette.mode === 'dark'
+                                        ? 'linear-gradient(135deg, rgba(25, 39, 52, 0.5) 0%, rgba(21, 32, 43, 0.5) 100%)'
+                                        : 'linear-gradient(135deg, rgba(255, 255, 255, 0.5) 0%, rgba(248, 250, 252, 0.5) 100%)',
+                                    borderRadius: 3,
+                                    border: '1px solid rgba(29, 161, 242, 0.1)',
+                                    mt: 2
+                                }}>
+                                    <Typography variant="body1" color="text.secondary" fontWeight="500">
+                                        🎉 You've reached the end! 
+                                    </Typography>
+                                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                                        That's all the posts for now. Check back later for more content!
+                                    </Typography>
+                                </Box>
+                            )}
                         </Box>
                     )}
                 </Paper>
