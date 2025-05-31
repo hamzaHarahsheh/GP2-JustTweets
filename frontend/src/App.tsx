@@ -9,6 +9,7 @@ const Sidebar = lazy(() => import('./components/Sidebar'));
 const Timeline = lazy(() => import('./components/Timeline'));
 const Profile = lazy(() => import('./components/Profile'));
 const Explore = lazy(() => import('./components/Explore'));
+const Resources = lazy(() => import('./components/Resources'));
 const Notifications = lazy(() => import('./components/Notifications'));
 const PostDetail = lazy(() => import('./components/PostDetail'));
 const Login = lazy(() => import('./pages/Login'));
@@ -110,6 +111,14 @@ const AppLayout: React.FC = () => {
               element={
                 <PrivateRoute>
                   <Explore />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/resources"
+              element={
+                <PrivateRoute>
+                  <Resources />
                 </PrivateRoute>
               }
             />

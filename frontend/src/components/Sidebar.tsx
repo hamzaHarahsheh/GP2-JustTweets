@@ -8,6 +8,7 @@ import {
     Notifications as NotificationsIcon,
     Person as PersonIcon,
     Logout as LogoutIcon,
+    School as SchoolIcon,
 } from '@mui/icons-material';
 import {
     List,
@@ -78,10 +79,11 @@ const Sidebar: React.FC = () => {
     };
 
     const menuItems = [
-        { text: 'Home', icon: <HomeIcon />, path: '/' },
-        { text: 'Explore', icon: <ExploreIcon />, path: '/explore' },
+        { name: 'Home', icon: <HomeIcon />, path: '/' },
+        { name: 'Explore', icon: <ExploreIcon />, path: '/explore' },
+        { name: 'Resources', icon: <SchoolIcon />, path: '/resources' },
         { 
-            text: 'Notifications', 
+            name: 'Notifications', 
             icon: unreadCount > 0 ? (
                 <Badge badgeContent={unreadCount} color="error">
                     <NotificationsIcon />
@@ -91,7 +93,7 @@ const Sidebar: React.FC = () => {
             ), 
             path: '/notifications' 
         },
-        { text: 'Profile', icon: <PersonIcon />, path: `/profile/${user?.username}` },
+        { name: 'Profile', icon: <PersonIcon />, path: `/profile/${user?.username}` }
     ];
 
     const handleLogout = () => {
@@ -189,7 +191,7 @@ const Sidebar: React.FC = () => {
                 {menuItems.map((item, index) => (
                     <ListItem 
                         disablePadding 
-                        key={item.text}
+                        key={item.name}
                         sx={{
                             mb: 1,
                             opacity: 0,
@@ -250,7 +252,7 @@ const Sidebar: React.FC = () => {
                                 {item.icon}
                             </ListItemIcon>
                             <ListItemText 
-                                primary={item.text}
+                                primary={item.name}
                                 primaryTypographyProps={{
                                     fontWeight: isActive(item.path) ? 700 : 500,
                                     color: isActive(item.path) ? 'primary.main' : 'text.primary',
