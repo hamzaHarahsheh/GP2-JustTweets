@@ -206,8 +206,8 @@ const Explore: React.FC = () => {
                             }}
                         />
                     </Paper>
-                    
-                    {searchQuery && (
+
+            {searchQuery && (
                         <Paper
                             elevation={8}
                             sx={{
@@ -259,7 +259,7 @@ const Explore: React.FC = () => {
                                                     <Button
                                                         variant={followingIds.has(result.id) ? 'contained' : 'outlined'}
                                                         size="small"
-                                                        onClick={() => handleFollow(result.id)}
+                                            onClick={() => handleFollow(result.id)}
                                                         sx={{
                                                             borderRadius: 20,
                                                             px: 3,
