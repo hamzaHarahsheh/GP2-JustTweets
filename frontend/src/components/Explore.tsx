@@ -1,132 +1,72 @@
 import React, { useState, useEffect } from 'react';
-import { Search, TrendingUp, Users, Image as ImageIcon, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { userService } from '../services/api';
+import { userService, postService } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
-import { User } from '../types';
-
-interface Trend {
-    id: string;
-    hashtag: string;
-    tweetCount: number;
-    category: string;
-}
-
-interface SuggestedUser {
-    id: string;
-    username: string;
-    name: string;
-    avatar: string;
-    bio: string;
-}
-
-interface TopTweet {
-    id: string;
-    username: string;
-    content: string;
-    likes: number;
-    retweets: number;
-    timestamp: string;
-    media?: string;
-}
-
-const mockTrends: Trend[] = [
-    { id: '1', hashtag: 'ReactJS', tweetCount: 12500, category: 'Technology' },
-    { id: '2', hashtag: 'OpenAI', tweetCount: 8900, category: 'Technology' },
-    { id: '3', hashtag: 'WebDev', tweetCount: 5600, category: 'Technology' },
-    { id: '4', hashtag: 'AI', tweetCount: 23400, category: 'Technology' },
-    { id: '5', hashtag: 'Coding', tweetCount: 12300, category: 'Technology' },
-];
-
-const mockSuggestedUsers: SuggestedUser[] = [
-    {
-        id: '1',
-        username: 'johndoe',
-        name: 'John Doe',
-        avatar: 'https://i.pravatar.cc/150?img=1',
-        bio: 'Software Engineer | React Enthusiast',
-    },
-    {
-        id: '2',
-        username: 'janedoe',
-        name: 'Jane Doe',
-        avatar: 'https://i.pravatar.cc/150?img=2',
-        bio: 'UI/UX Designer | Creative Mind',
-    },
-    {
-        id: '3',
-        username: 'techguru',
-        name: 'Tech Guru',
-        avatar: 'https://i.pravatar.cc/150?img=3',
-        bio: 'Tech Blogger | AI Researcher',
-    },
-];
-
-const mockTopTweets: TopTweet[] = [
-    {
-        id: '1',
-        username: 'johndoe',
-        content: 'Just launched my new React project! Check it out 🚀 #ReactJS #WebDev',
-        likes: 1234,
-        retweets: 567,
-        timestamp: '2h',
-        media: 'https://picsum.photos/400/300',
-    },
-    {
-        id: '2',
-        username: 'janedoe',
-        content: 'The future of AI is here! Amazing developments in the field 🤖 #AI #Technology',
-        likes: 890,
-        retweets: 234,
-        timestamp: '3h',
-    },
-    {
-        id: '3',
-        username: 'techguru',
-        content: 'New blog post about the latest web development trends. Link in bio! #WebDev #Coding',
-        likes: 567,
-        retweets: 123,
-        timestamp: '4h',
-    },
-];
-
-const categories = ['All', 'Technology', 'Sports', 'Entertainment', 'News'];
+import { User, Post as PostType } from '../types';
+import Post from './Post';
+import { Box, Typography, CircularProgress, Paper, TextField, InputAdornment, IconButton, List, ListItem, ListItemAvatar, Avatar, ListItemText, Button } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
+import SearchIcon from '@mui/icons-material/Search';
+import CloseIcon from '@mui/icons-material/Close';
 
 const Explore: React.FC = () => {
-    const [activeCategory, setActiveCategory] = useState('All');
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState<User[]>([]);
-    const [isSearching, setIsSearching] = useState(false);
-    const [followingUsers, setFollowingUsers] = useState<Set<string>>(new Set());
+    const [searchLoading, setSearchLoading] = useState(false);
+    const [searchError, setSearchError] = useState<string | null>(null);
+    const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
+    const [posts, setPosts] = useState<PostType[]>([]);
+    const [postsLoading, setPostsLoading] = useState(true);
+    const [postsError, setPostsError] = useState<string | null>(null);
     const navigate = useNavigate();
     const { user } = useAuth();
+    const theme = useTheme();
 
     useEffect(() => {
-        const searchUsers = async () => {
-            if (searchQuery.trim().length > 0) {
-                setIsSearching(true);
-                try {
-                    const results = await userService.searchUsers(searchQuery);
-                    setSearchResults(results);
-                } catch (error) {
-                    console.error('Failed to search users:', error);
-                } finally {
-                    setIsSearching(false);
-                }
-            } else {
-                setSearchResults([]);
+        const fetchPosts = async () => {
+            try {
+                setPostsLoading(true);
+                const allPosts = await postService.getAllPosts();
+                allPosts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+                setPosts(allPosts);
+                setPostsError(null);
+            } catch (error) {
+                console.error('Failed to fetch posts:', error);
+                setPostsError('Failed to load posts');
+            } finally {
+                setPostsLoading(false);
             }
         };
 
-        const debounceTimer = setTimeout(searchUsers, 300);
-        return () => clearTimeout(debounceTimer);
+        fetchPosts();
+    }, []);
+
+    useEffect(() => {
+        if (!searchQuery.trim()) {
+            setSearchResults([]);
+            setSearchError(null);
+            return;
+        }
+        setSearchLoading(true);
+        setSearchError(null);
+        const timer = setTimeout(async () => {
+            try {
+                const results = await userService.searchUsers(searchQuery.trim());
+                setSearchResults(results);
+            } catch (err) {
+                setSearchError('Failed to search users');
+            } finally {
+                setSearchLoading(false);
+            }
+        }, 300);
+        return () => clearTimeout(timer);
     }, [searchQuery]);
 
     const handleFollow = async (userId: string) => {
         try {
-            if (followingUsers.has(userId)) {
+            if (followingIds.has(userId)) {
                 const res: any = await userService.unfollowUser(userId);
-                setFollowingUsers(prev => {
+                setFollowingIds(prev => {
                     const newSet = new Set(prev);
                     newSet.delete(userId);
                     return newSet;
@@ -136,225 +76,303 @@ const Explore: React.FC = () => {
                 }
             } else {
                 const res: any = await userService.followUser(userId);
-                setFollowingUsers(prev => new Set(prev).add(userId));
+                setFollowingIds(prev => new Set(prev).add(userId));
                 if (res && typeof res.followersCount === 'number') {
                     setSearchResults(prev => prev.map(u => u.id === userId ? { ...u, followers: res.followersCount } : u));
                 }
             }
-        } catch (error) {
-            console.error('Failed to follow/unfollow user:', error);
+        } catch (err) {
+            console.error('Error following/unfollowing user:', err);
         }
     };
 
-    const filteredTrends = mockTrends.filter(
-        trend => activeCategory === 'All' || trend.category === activeCategory
-    );
-
     return (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div className="relative mb-8">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Search className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                    type="text"
-                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-full bg-white shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Search users..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                />
-                {searchQuery && (
-                    <button
-                        onClick={() => setSearchQuery('')}
-                        className="absolute inset-y-0 right-0 pr-3 flex items-center"
+        <Box sx={{ 
+            minHeight: '100vh',
+            background: 'linear-gradient(180deg, rgba(29, 161, 242, 0.02) 0%, transparent 100%)',
+            pb: 4
+        }}>
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <Box sx={{
+                    mb: 4,
+                    position: 'sticky',
+                    top: 0,
+                    zIndex: 10,
+                    backdropFilter: 'blur(20px)',
+                    background: `${theme.palette.background.default}95`,
+                    py: 2,
+                    borderBottom: '1px solid',
+                    borderColor: 'divider'
+                }}>
+                    <Paper
+                        elevation={0}
+                        sx={{
+                            background: theme.palette.mode === 'dark'
+                                ? 'linear-gradient(135deg, rgba(25, 39, 52, 0.3) 0%, rgba(21, 32, 43, 0.2) 100%)'
+                                : 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
+                            backdropFilter: 'blur(10px)',
+                            border: '1px solid rgba(29, 161, 242, 0.1)',
+                            borderRadius: 3,
+                            overflow: 'hidden'
+                        }}
                     >
-                        <X className="h-5 w-5 text-gray-400 hover:text-gray-600" />
-                    </button>
-                )}
-            </div>
-
-            {searchQuery && (
-                <div className="mb-8 bg-white rounded-xl shadow-sm p-6">
-                    <h2 className="text-xl font-bold mb-4">Search Results</h2>
-                    {isSearching ? (
-                        <div className="flex justify-center py-4">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-                        </div>
-                    ) : searchResults.length > 0 ? (
-                        <div className="space-y-4">
-                            {searchResults.map((result) => (
-                                <div key={result.id} className="flex items-center justify-between p-4 rounded-lg hover:bg-gray-50">
-                                    <div className="flex items-center space-x-4">
-                                        <img
-                                            src={result.profilePicture?.data 
-                                                ? `data:${result.profilePicture.type};base64,${result.profilePicture.data}`
-                                                : `https://i.pravatar.cc/150?u=${result.username}`}
-                                            alt={result.username}
-                                            className="w-12 h-12 rounded-full"
-                                        />
-                                        <div>
-                                            <div className="font-semibold">{result.username}</div>
-                                            <div className="text-sm text-gray-500">@{result.username}</div>
-                                            {result.bio && (
-                                                <div className="text-sm text-gray-600 mt-1">{result.bio}</div>
-                                            )}
-                                        </div>
-                                    </div>
-                                    {result.id !== user?.id && (
-                                        <button
-                                            onClick={() => handleFollow(result.id)}
-                                            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors
-                                                ${followingUsers.has(result.id)
-                                                    ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                                                    : 'bg-blue-500 text-white hover:bg-blue-600'
-                                                }`}
+                        <TextField
+                            fullWidth
+                            placeholder="Discover amazing people..."
+                            value={searchQuery}
+                            onChange={e => setSearchQuery(e.target.value)}
+                            InputProps={{
+                                startAdornment: (
+                                    <InputAdornment position="start">
+                                        <SearchIcon sx={{ color: 'primary.main' }} />
+                                    </InputAdornment>
+                                ),
+                                endAdornment: searchQuery && (
+                                    <InputAdornment position="end">
+                                        <IconButton 
+                                            onClick={() => setSearchQuery('')}
+                                            sx={{
+                                                '&:hover': {
+                                                    backgroundColor: 'rgba(29, 161, 242, 0.1)',
+                                                    color: 'primary.main'
+                                                }
+                                            }}
                                         >
-                                            {followingUsers.has(result.id) ? 'Following' : 'Follow'}
-                                        </button>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="text-center py-4 text-gray-500">
-                            No users found
-                        </div>
+                                            <CloseIcon />
+                                        </IconButton>
+                                    </InputAdornment>
+                                )
+                            }}
+                            sx={{
+                                '& .MuiOutlinedInput-root': {
+                                    border: 'none',
+                                    '& fieldset': { border: 'none' },
+                                    '&:hover fieldset': { border: 'none' },
+                                    '&.Mui-focused fieldset': { border: 'none' },
+                                    backgroundColor: 'transparent',
+                                    fontSize: '1.1rem'
+                                },
+                                '& .MuiInputBase-input::placeholder': {
+                                    color: theme.palette.text.secondary,
+                                    opacity: 0.8
+                                }
+                            }}
+                        />
+                    </Paper>
+                    
+                    {searchQuery && (
+                        <Paper
+                            elevation={8}
+                            sx={{
+                                position: 'relative',
+                                zIndex: 20,
+                                background: theme.palette.mode === 'dark'
+                                    ? 'linear-gradient(135deg, rgba(25, 39, 52, 0.95) 0%, rgba(21, 32, 43, 0.95) 100%)'
+                                    : 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.95) 100%)',
+                                backdropFilter: 'blur(20px)',
+                                borderRadius: 3,
+                                mt: 1,
+                                border: '1px solid rgba(29, 161, 242, 0.1)',
+                                overflow: 'hidden'
+                            }}
+                        >
+                            {searchLoading ? (
+                                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', p: 4 }}>
+                                    <CircularProgress size={24} />
+                                    <Typography variant="body2" sx={{ ml: 2 }}>
+                                        Searching...
+                                    </Typography>
+                                </Box>
+                            ) : searchError ? (
+                                <Box sx={{ p: 3, textAlign: 'center' }}>
+                                    <Typography color="error" variant="body2">{searchError}</Typography>
+                                </Box>
+                            ) : searchResults.length === 0 && searchQuery.trim() !== '' && !searchLoading ? (
+                                <Box sx={{ p: 3, textAlign: 'center' }}>
+                                    <Typography variant="body2" color="text.secondary">
+                                        No users found for "{searchQuery}"
+                                    </Typography>
+                                </Box>
+                            ) : (
+                                <List sx={{ py: 0 }}>
+                                    {searchResults.map((result, index) => (
+                                        <ListItem 
+                                            key={result.id} 
+                                            sx={{
+                                                borderBottom: index < searchResults.length - 1 ? '1px solid' : 'none',
+                                                borderColor: 'rgba(29, 161, 242, 0.1)',
+                                                transition: 'all 0.2s ease',
+                                                '&:hover': {
+                                                    backgroundColor: 'rgba(29, 161, 242, 0.05)',
+                                                    transform: 'translateX(4px)'
+                                                }
+                                            }}
+                                            secondaryAction={
+                                                result.id !== user?.id && (
+                                                    <Button
+                                                        variant={followingIds.has(result.id) ? 'contained' : 'outlined'}
+                                                        size="small"
+                                                        onClick={() => handleFollow(result.id)}
+                                                        sx={{
+                                                            borderRadius: 20,
+                                                            px: 3,
+                                                            textTransform: 'none',
+                                                            fontWeight: 600,
+                                                            minWidth: 100,
+                                                            background: followingIds.has(result.id) 
+                                                                ? 'linear-gradient(45deg, #1DA1F2 30%, #1976d2 90%)'
+                                                                : 'transparent',
+                                                            '&:hover': {
+                                                                transform: 'translateY(-2px)',
+                                                                boxShadow: followingIds.has(result.id) 
+                                                                    ? '0 4px 12px rgba(29, 161, 242, 0.3)'
+                                                                    : '0 2px 8px rgba(0,0,0,0.1)'
+                                                            }
+                                                        }}
+                                                    >
+                                                        {followingIds.has(result.id) ? 'Following' : 'Follow'}
+                                                    </Button>
+                                                )
+                                            }
+                                        >
+                                            <ListItemAvatar>
+                                                <Avatar 
+                                                    src={result.profilePicture?.data ? `data:${result.profilePicture.type};base64,${result.profilePicture.data}` : undefined}
+                                                    sx={{
+                                                        width: 50,
+                                                        height: 50,
+                                                        border: '2px solid',
+                                                        borderColor: 'primary.main',
+                                                        transition: 'transform 0.2s ease',
+                                                        '&:hover': { transform: 'scale(1.05)' }
+                                                    }}
+                                                >
+                                                    {!result.profilePicture && result.username[0].toUpperCase()}
+                                                </Avatar>
+                                            </ListItemAvatar>
+                                            <ListItemText
+                                                primary={
+                                                    <Typography
+                                                        variant="subtitle1"
+                                                        fontWeight="600"
+                                                        sx={{ 
+                                                            cursor: 'pointer',
+                                                            color: 'primary.main',
+                                                            '&:hover': { textDecoration: 'underline' }
+                                                        }}
+                                                        onClick={() => navigate(`/profile/${result.username}`)}
+                                                    >
+                                                        @{result.username}
+                                                    </Typography>
+                                                }
+                                                secondary={
+                                                    <Typography variant="body2" color="text.secondary">
+                                                        {result.email}
+                                                    </Typography>
+                                                }
+                                            />
+                                        </ListItem>
+                                    ))}
+                                </List>
+                            )}
+                        </Paper>
                     )}
-                </div>
-            )}
+                </Box>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-2 space-y-8">
-                    <div className="flex space-x-4 overflow-x-auto pb-2">
-                        {categories.map((category) => (
-                            <button
-                                key={category}
-                                onClick={() => setActiveCategory(category)}
-                                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors
-                                    ${activeCategory === category
-                                        ? 'bg-blue-500 text-white'
-                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                    }`}
-                            >
-                                {category}
-                            </button>
-                        ))}
-                    </div>
-
-                    <div className="bg-white rounded-xl shadow-sm p-6">
-                        <div className="flex items-center mb-4">
-                            <TrendingUp className="h-5 w-5 text-blue-500 mr-2" />
-                            <h2 className="text-xl font-bold">Trending Topics</h2>
-                        </div>
-                        <div className="space-y-4">
-                            {filteredTrends.map((trend) => (
-                                <div
-                                    key={trend.id}
-                                    className="p-4 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
-                                    onClick={() => navigate(`/search?q=${trend.hashtag}`)}
+                <Paper
+                    elevation={0}
+                    sx={{
+                        background: theme.palette.mode === 'dark'
+                            ? 'linear-gradient(135deg, rgba(25, 39, 52, 0.9) 0%, rgba(21, 32, 43, 0.9) 100%)'
+                            : 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.9) 100%)',
+                        backdropFilter: 'blur(20px)',
+                        border: '1px solid rgba(29, 161, 242, 0.1)',
+                        borderRadius: 4,
+                        p: 3
+                    }}
+                >
+                    <Typography variant="h5" fontWeight="700" sx={{ 
+                        mb: 3,
+                        background: 'linear-gradient(45deg, #1DA1F2 30%, #1976d2 90%)',
+                        backgroundClip: 'text',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent'
+                    }}>
+                        Explore Posts
+                    </Typography>
+                    
+                    {postsLoading ? (
+                        <Box sx={{ 
+                            display: 'flex', 
+                            justifyContent: 'center', 
+                            alignItems: 'center', 
+                            minHeight: '300px',
+                            flexDirection: 'column',
+                            gap: 2
+                        }}>
+                            <CircularProgress size={40} thickness={4} />
+                            <Typography variant="body1" color="text.secondary">
+                                Loading posts...
+                            </Typography>
+                        </Box>
+                    ) : postsError ? (
+                        <Box sx={{ 
+                            p: 4, 
+                            textAlign: 'center',
+                            background: 'linear-gradient(135deg, rgba(244, 67, 54, 0.1) 0%, rgba(244, 67, 54, 0.05) 100%)',
+                            borderRadius: 3,
+                            border: '1px solid rgba(244, 67, 54, 0.2)'
+                        }}>
+                            <Typography color="error" variant="h6" gutterBottom>
+                                Oops! Something went wrong
+                            </Typography>
+                            <Typography color="text.secondary">
+                                {postsError}
+                            </Typography>
+                        </Box>
+                    ) : posts.length === 0 ? (
+                        <Box sx={{ 
+                            p: 6, 
+                            textAlign: 'center',
+                            background: 'linear-gradient(135deg, rgba(29, 161, 242, 0.05) 0%, rgba(29, 161, 242, 0.02) 100%)',
+                            borderRadius: 3,
+                            border: '2px dashed rgba(29, 161, 242, 0.2)'
+                        }}>
+                            <Typography variant="h6" fontWeight="600" gutterBottom>
+                                No posts yet 📝
+                            </Typography>
+                            <Typography variant="body1" color="text.secondary">
+                                Be the first to share something amazing!
+                            </Typography>
+                        </Box>
+                    ) : (
+                        <Box>
+                            {posts.map((post, index) => (
+                                <Box
+                                    key={post.id}
+                                    sx={{
+                                        opacity: 0,
+                                        animation: `fadeInUp 0.6s ease-out ${index * 0.1}s forwards`,
+                                        '@keyframes fadeInUp': {
+                                            from: {
+                                                opacity: 0,
+                                                transform: 'translateY(20px)'
+                                            },
+                                            to: {
+                                                opacity: 1,
+                                                transform: 'translateY(0)'
+                                            }
+                                        }
+                                    }}
                                 >
-                                    <div className="font-semibold text-blue-500">#{trend.hashtag}</div>
-                                    <div className="text-sm text-gray-500">{trend.tweetCount.toLocaleString()} tweets</div>
-                                </div>
+                                    <Post post={post} />
+                                </Box>
                             ))}
-                        </div>
-                    </div>
-
-                    <div className="bg-white rounded-xl shadow-sm p-6">
-                        <h2 className="text-xl font-bold mb-4">Top Tweets</h2>
-                        <div className="space-y-6">
-                            {mockTopTweets.map((tweet) => (
-                                <div key={tweet.id} className="border-b border-gray-100 pb-6 last:border-0">
-                                    <div className="flex items-start space-x-4">
-                                        <img
-                                            src={`https://i.pravatar.cc/150?u=${tweet.username}`}
-                                            alt={tweet.username}
-                                            className="w-12 h-12 rounded-full"
-                                        />
-                                        <div className="flex-1">
-                                            <div className="flex items-center space-x-2">
-                                                <span className="font-bold">{tweet.username}</span>
-                                                <span className="text-gray-500">· {tweet.timestamp}</span>
-                                            </div>
-                                            <p className="mt-1">{tweet.content}</p>
-                                            {tweet.media && (
-                                                <img
-                                                    src={tweet.media}
-                                                    alt="Tweet media"
-                                                    className="mt-3 rounded-lg max-h-64 object-cover"
-                                                />
-                                            )}
-                                            <div className="flex items-center space-x-6 mt-3 text-gray-500">
-                                                <button className="flex items-center space-x-1 hover:text-blue-500">
-                                                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                                                    </svg>
-                                                    <span>{tweet.likes}</span>
-                                                </button>
-                                                <button className="flex items-center space-x-1 hover:text-green-500">
-                                                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                                                    </svg>
-                                                    <span>{tweet.retweets}</span>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-
-                <div className="space-y-8">
-                    <div className="bg-white rounded-xl shadow-sm p-6">
-                        <div className="flex items-center mb-4">
-                            <Users className="h-5 w-5 text-blue-500 mr-2" />
-                            <h2 className="text-xl font-bold">Suggested Users</h2>
-                        </div>
-                        <div className="space-y-4">
-                            {mockSuggestedUsers.map((user) => (
-                                <div key={user.id} className="flex items-center justify-between">
-                                    <div className="flex items-center space-x-3">
-                                        <img
-                                            src={user.avatar}
-                                            alt={user.name}
-                                            className="w-12 h-12 rounded-full"
-                                        />
-                                        <div>
-                                            <div className="font-semibold">{user.name}</div>
-                                            <div className="text-sm text-gray-500">@{user.username}</div>
-                                        </div>
-                                    </div>
-                                    <button className="px-4 py-1.5 bg-blue-500 text-white rounded-full text-sm font-medium hover:bg-blue-600 transition-colors">
-                                        Follow
-                                    </button>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="bg-white rounded-xl shadow-sm p-6">
-                        <div className="flex items-center mb-4">
-                            <ImageIcon className="h-5 w-5 text-blue-500 mr-2" />
-                            <h2 className="text-xl font-bold">Media Gallery</h2>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                            {mockTopTweets
-                                .filter((tweet) => tweet.media)
-                                .map((tweet) => (
-                                    <img
-                                        key={tweet.id}
-                                        src={tweet.media}
-                                        alt="Tweet media"
-                                        className="w-full h-32 object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
-                                    />
-                                ))}
-                        </div>
-                    </div>
-                </div>
+                        </Box>
+                    )}
+                </Paper>
             </div>
-        </div>
+        </Box>
     );
 };
 
