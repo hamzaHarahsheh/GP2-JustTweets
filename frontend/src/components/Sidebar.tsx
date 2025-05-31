@@ -20,7 +20,10 @@ import {
     Typography,
     Dialog,
     Badge,
+    Paper,
+    Divider,
 } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 
 const Sidebar: React.FC = () => {
     const navigate = useNavigate();
@@ -28,6 +31,8 @@ const Sidebar: React.FC = () => {
     const { user, logout } = useAuth();
     const [dialogOpen, setDialogOpen] = useState(false);
     const [unreadCount, setUnreadCount] = useState(0);
+    const [showWelcome, setShowWelcome] = useState(true);
+    const theme = useTheme();
     const userId = user?.id;
 
     useEffect(() => {
@@ -37,6 +42,14 @@ const Sidebar: React.FC = () => {
             return () => clearInterval(interval);
         }
     }, [userId]);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setShowWelcome(false);
+        }, 5000);
+        
+        return () => clearTimeout(timer);
+    }, []);
 
     useEffect(() => {
         if (location.pathname === '/notifications' && userId) {
@@ -91,54 +104,207 @@ const Sidebar: React.FC = () => {
     const isActive = (path: string) => location.pathname === path;
 
     return (
-        <Box sx={{ width: 260, bgcolor: 'background.paper', minHeight: '100vh', p: 2 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 4 }}>
+        <Paper
+            elevation={0}
+            sx={{
+                width: 280,
+                minHeight: '100vh',
+                background: 'linear-gradient(180deg, rgba(29, 161, 242, 0.05) 0%, rgba(29, 161, 242, 0.02) 50%, transparent 100%)',
+                backdropFilter: 'blur(20px)',
+                borderRight: '1px solid rgba(29, 161, 242, 0.1)',
+                p: 3,
+                display: 'flex',
+                flexDirection: 'column'
+            }}
+        >
+            <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: 2, 
+                mb: 3,
+                p: 2,
+                borderRadius: 3,
+                background: theme.palette.mode === 'dark'
+                    ? 'linear-gradient(135deg, rgba(25, 39, 52, 0.8) 0%, rgba(21, 32, 43, 0.8) 100%)'
+                    : 'linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(248, 250, 252, 0.8) 100%)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(29, 161, 242, 0.1)',
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                    transform: 'translateY(-2px)',
+                    boxShadow: '0 8px 32px rgba(29, 161, 242, 0.15)'
+                }
+            }}>
                 <Avatar
                     src={profilePicUrl}
                     onClick={() => profilePicUrl && setDialogOpen(true)}
                     sx={{
-                        width: 48,
-                        height: 48,
+                        width: 50,
+                        height: 50,
                         cursor: profilePicUrl ? 'pointer' : 'default',
-                        '&:hover': { opacity: 0.8 }
+                        border: '3px solid',
+                        borderColor: 'primary.main',
+                        background: 'linear-gradient(135deg, #1DA1F2 0%, #1976d2 100%)',
+                        boxShadow: '0 4px 20px rgba(29, 161, 242, 0.3)',
+                        transition: 'all 0.3s ease',
+                        '&:hover': { 
+                            transform: 'scale(1.1)',
+                            boxShadow: '0 6px 25px rgba(29, 161, 242, 0.4)'
+                        }
                     }}
-                />
+                >
+                    {!profilePicUrl && user?.username?.[0].toUpperCase()}
+                </Avatar>
                 <Box>
-                    <Typography fontWeight="bold">
+                    <Typography 
+                        variant="h6" 
+                        fontWeight="700"
+                        sx={{ 
+                            background: 'linear-gradient(45deg, #1DA1F2 30%, #1976d2 90%)',
+                            backgroundClip: 'text',
+                            WebkitBackgroundClip: 'text',
+                            WebkitTextFillColor: 'transparent',
+                            mb: 0.5,
+                            fontSize: '1.1rem'
+                        }}
+                    >
                         {user?.username}
                     </Typography>
+                    {showWelcome && (
+                        <Typography 
+                            variant="body2" 
+                            color="text.secondary"
+                            sx={{
+                                transition: 'opacity 0.5s ease',
+                                opacity: showWelcome ? 1 : 0
+                            }}
+                        >
+                            Welcome back! 👋
+                        </Typography>
+                    )}
                 </Box>
             </Box>
             
-            <List>
-                {menuItems.map((item) => (
-                    <ListItem disablePadding key={item.text}>
+            <List sx={{ flex: 1, py: 0 }}>
+                {menuItems.map((item, index) => (
+                    <ListItem 
+                        disablePadding 
+                        key={item.text}
+                        sx={{
+                            mb: 1,
+                            opacity: 0,
+                            animation: `slideIn 0.5s ease-out ${index * 0.1}s forwards`,
+                            '@keyframes slideIn': {
+                                from: {
+                                    opacity: 0,
+                                    transform: 'translateX(-30px)'
+                                },
+                                to: {
+                                    opacity: 1,
+                                    transform: 'translateX(0)'
+                                }
+                            }
+                        }}
+                    >
                         <ListItemButton
                             selected={isActive(item.path)}
                             onClick={() => handleMenuItemClick(item.path)}
                             sx={{
-                                borderRadius: 8,
-                                mb: 1,
-                                backgroundColor: isActive(item.path) ? '#1a2733' : 'inherit',
-                                color: isActive(item.path) ? '#1DA1F2' : 'inherit',
+                                borderRadius: 3,
+                                p: 2,
+                                transition: 'all 0.3s ease',
+                                position: 'relative',
+                                overflow: 'hidden',
+                                backgroundColor: isActive(item.path) 
+                                    ? 'rgba(29, 161, 242, 0.1)' 
+                                    : 'transparent',
+                                '&:before': {
+                                    content: '""',
+                                    position: 'absolute',
+                                    left: 0,
+                                    top: 0,
+                                    bottom: 0,
+                                    width: isActive(item.path) ? 4 : 0,
+                                    background: 'linear-gradient(180deg, #1DA1F2 0%, #1976d2 100%)',
+                                    borderRadius: '0 2px 2px 0',
+                                    transition: 'width 0.3s ease'
+                                },
+                                '&:hover': {
+                                    backgroundColor: 'rgba(29, 161, 242, 0.08)',
+                                    transform: 'translateX(8px)',
+                                    boxShadow: '0 4px 20px rgba(29, 161, 242, 0.15)',
+                                    '&:before': {
+                                        width: 4
+                                    }
+                                }
                             }}
                         >
-                            <ListItemIcon>
+                            <ListItemIcon
+                                sx={{
+                                    color: isActive(item.path) ? 'primary.main' : 'text.secondary',
+                                    minWidth: 48,
+                                    transition: 'all 0.3s ease',
+                                    transform: isActive(item.path) ? 'scale(1.1)' : 'scale(1)'
+                                }}
+                            >
                                 {item.icon}
                             </ListItemIcon>
-                            <ListItemText primary={item.text} />
+                            <ListItemText 
+                                primary={item.text}
+                                primaryTypographyProps={{
+                                    fontWeight: isActive(item.path) ? 700 : 500,
+                                    color: isActive(item.path) ? 'primary.main' : 'text.primary',
+                                    fontSize: '1.1rem'
+                                }}
+                            />
                         </ListItemButton>
                     </ListItem>
                 ))}
+                
+                <Divider sx={{ my: 3, borderColor: 'rgba(29, 161, 242, 0.2)' }} />
+                
                 <ListItem disablePadding>
                     <ListItemButton
                         onClick={handleLogout}
-                        sx={{ borderRadius: 8, mb: 1 }}
+                        sx={{
+                            borderRadius: 3,
+                            p: 2,
+                            transition: 'all 0.3s ease',
+                            '&:hover': {
+                                backgroundColor: 'rgba(244, 67, 54, 0.08)',
+                                transform: 'translateX(8px)',
+                                boxShadow: '0 4px 20px rgba(244, 67, 54, 0.15)',
+                                '& .MuiListItemIcon-root': {
+                                    color: 'error.main',
+                                    transform: 'scale(1.1)'
+                                },
+                                '& .MuiListItemText-primary': {
+                                    color: 'error.main'
+                                }
+                            }
+                        }}
                     >
-                        <ListItemIcon>
+                        <ListItemIcon
+                            sx={{
+                                color: 'text.secondary',
+                                minWidth: 48,
+                                transition: 'all 0.3s ease'
+                            }}
+                        >
                             <LogoutIcon />
                         </ListItemIcon>
-                        <ListItemText primary="Logout" />
+                        <ListItemText 
+                            primary="Logout"
+                            primaryTypographyProps={{
+                                fontWeight: 500,
+                                fontSize: '1.1rem'
+                            }}
+                            sx={{
+                                '& .MuiListItemText-primary': {
+                                    transition: 'color 0.3s ease'
+                                }
+                            }}
+                        />
                     </ListItemButton>
                 </ListItem>
             </List>
@@ -159,8 +325,8 @@ const Sidebar: React.FC = () => {
                 BackdropProps={{
                     sx: {
                         background: 'transparent !important',
-                        backdropFilter: 'blur(6px)',
-                        WebkitBackdropFilter: 'blur(6px)',
+                        backdropFilter: 'blur(8px)',
+                        WebkitBackdropFilter: 'blur(8px)',
                     }
                 }}
             >
@@ -180,11 +346,17 @@ const Sidebar: React.FC = () => {
                     <Avatar
                         src={profilePicUrl}
                         alt={user?.username}
-                        sx={{ width: 300, height: 300, boxShadow: 3 }}
+                        sx={{ 
+                            width: 320, 
+                            height: 320, 
+                            boxShadow: '0 20px 60px rgba(29, 161, 242, 0.3)',
+                            border: '4px solid',
+                            borderColor: 'primary.main'
+                        }}
                     />
                 </Box>
             </Dialog>
-        </Box>
+        </Paper>
     );
 };
 
