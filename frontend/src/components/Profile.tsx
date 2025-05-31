@@ -58,7 +58,24 @@ const Profile: React.FC = () => {
             try {
                 const userData = await userService.getUserByUsername(username || '');
                 setProfileUser(userData);
-                setBio(userData.bio || '');
+                
+                let parsedBio = userData.bio || '';
+                try {
+                    if (parsedBio.startsWith('{"bio":') && parsedBio.endsWith('}')) {
+                        const bioObj = JSON.parse(parsedBio);
+                        parsedBio = bioObj.bio || '';
+                    }
+                    else if (parsedBio.startsWith('"') && parsedBio.endsWith('"')) {
+                        parsedBio = parsedBio.slice(1, -1);
+                    }
+                } catch (e) {
+                    console.log('Bio parsing failed, using original:', parsedBio);
+                }
+                
+                setBio(parsedBio);
+                const updatedUserData = { ...userData, bio: parsedBio };
+                setProfileUser(updatedUserData);
+                
                 const postsData = await postService.getPostsByUserId(userData.id);
                 setPosts(postsData.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
                 setError(null);
@@ -78,12 +95,42 @@ const Profile: React.FC = () => {
     const handleEditProfile = async () => {
         if (!profileUser) return;
         try {
+            let updatedUser = profileUser;
+            
             if (profilePicture) {
-                await userService.updateProfilePicture(profileUser.id, profilePicture);
+                updatedUser = await userService.updateProfilePicture(profileUser.id, profilePicture);
             }
+            
+            if (bio !== (profileUser.bio || '')) {
+                console.log('Updating bio from:', profileUser.bio, 'to:', bio);
+                updatedUser = await userService.updateBio(profileUser.id, bio);
+            }
+            
             setEditDialogOpen(false);
-            const updatedUser = await userService.getUserByUsername(username || '');
-            setProfileUser(updatedUser);
+            setProfilePicture(null);
+            
+            const refreshedUser = await userService.getUserByUsername(username || '');
+            
+            let parsedBio = refreshedUser.bio || '';
+            try {
+                if (parsedBio.startsWith('{"bio":') && parsedBio.endsWith('}')) {
+                    const bioObj = JSON.parse(parsedBio);
+                    parsedBio = bioObj.bio || '';
+                }
+                else if (parsedBio.startsWith('"') && parsedBio.endsWith('"')) {
+                    parsedBio = parsedBio.slice(1, -1);
+                }
+            } catch (e) {
+                console.log('Bio parsing failed in handleEditProfile:', e);
+            }
+            
+            const finalUser = { ...refreshedUser, bio: parsedBio };
+            setProfileUser(finalUser);
+            setBio(parsedBio);
+            
+            if (currentUser && currentUser.id === refreshedUser.id) {
+                setUser(finalUser);
+            }
         } catch (error) {
             console.error('Error updating profile:', error);
         }

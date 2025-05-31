@@ -141,6 +141,15 @@ export const userService = {
         return response.data;
     },
 
+    updateBio: async (id: string, bio: string): Promise<User> => {
+        console.log('Updating bio for user:', id, 'with bio:', bio);
+        const requestData = { bio };
+        console.log('Sending request data:', requestData);
+        const response = await api.put<User>(`/users/${id}/bio`, requestData);
+        console.log('Bio update response:', response.data);
+        return response.data;
+    },
+
     getFollowers: async (userId: string): Promise<User[]> => {
         const response = await api.get<User[]>(`/users/${userId}/followers`);
         return response.data;
