@@ -89,16 +89,16 @@ const Resources: React.FC = () => {
                     color: '#2196F3',
                     description: 'Processor design and computer organization',
                     quizzes: [
-                        { id: '1', name: 'CPU Design Quiz', link: 'https://drive.google.com/quiz1', type: 'drive', dateAdded: '2024-01-15' },
-                        { id: '2', name: 'Memory Hierarchy Quiz', link: 'https://drive.google.com/quiz2', type: 'drive', dateAdded: '2024-01-20' }
+                        { id: '1', name: '2020/2021 1st Semester Quiz 1', link: 'https://drive.google.com/drive/u/0/folders/1TIWcxSPF9259B25c6VwJHwHY9U_Jp0Xu', type: 'drive', dateAdded: '2024-01-15' },
+                        { id: '2', name: '2020/2021 1st Semester Quiz 2', link: 'https://drive.google.com/drive/u/0/folders/1YYnWHbArqxuQlP0vn8jMUew8GGpdm6uz', type: 'drive', dateAdded: '2024-01-20' }
                     ],
                     exams: [
-                        { id: '1', name: 'Midterm Exam', link: 'https://drive.google.com/exam1', type: 'drive', dateAdded: '2024-02-01' },
-                        { id: '2', name: 'Final Exam', link: 'https://drive.google.com/exam2', type: 'drive', dateAdded: '2024-03-15' }
+                        { id: '1', name: 'First Exam', link: 'https://drive.google.com/drive/u/0/folders/1fvsoyNvfNMQL9eRf7gtCQ99aOPHru2JB', type: 'drive', dateAdded: '2024-02-01' },
+                        { id: '2', name: 'Final Exam', link: 'https://drive.google.com/drive/u/0/folders/1iR56TCVyHINAegsZDgl9Sy4EE3EC3Too', type: 'drive', dateAdded: '2024-03-15' }
                     ],
                     lectures: [
-                        { id: '1', name: 'Introduction to Computer Architecture', link: 'https://youtube.com/lecture1', type: 'youtube', dateAdded: '2024-01-10' },
-                        { id: '2', name: 'Instruction Set Architecture', link: 'https://youtube.com/lecture2', type: 'youtube', dateAdded: '2024-01-25' }
+                        { id: '1', name: 'Prof Ali Shatnawi', link: 'https://youtu.be/9YJIneoegDw?list=PLGhfn1pOt_mVqlLROCZjF_5-af-KrofmZ', type: 'youtube', dateAdded: '2024-01-10' },
+                        { id: '2', name: 'Dr Mohammad Shboul', link: 'https://youtu.be/LG5UAj05pII?list=PLZZBvv9dGNwIPTNvDM8FZ7rJLOFv2tuK-', type: 'youtube', dateAdded: '2024-01-25' }
                     ],
                     assignments: [
                         { id: '1', name: 'Processor Design Project', link: 'https://drive.google.com/assignment1', type: 'drive', dateAdded: '2024-01-12' },
@@ -112,16 +112,16 @@ const Resources: React.FC = () => {
                     color: '#9C27B0',
                     description: 'Microprocessor programming and interfacing',
                     quizzes: [
-                        { id: '1', name: 'Assembly Programming Quiz', link: 'https://drive.google.com/micro-quiz1', type: 'drive', dateAdded: '2024-01-18' }
+                        { id: '1', name: 'By Chapter', link: 'https://drive.google.com/drive/u/0/folders/1JuFRk-LE2fSzFhJQHSvVYtOKvEwyHok9', type: 'drive', dateAdded: '2024-01-18' }
                     ],
                     exams: [
-                        { id: '1', name: 'Microprocessor Midterm', link: 'https://drive.google.com/micro-exam1', type: 'drive', dateAdded: '2024-02-10' }
+                        { id: '1', name: 'Microprocessor Exams', link: 'https://drive.google.com/drive/folders/1-RAzBAzFsC5rDzjDLiytH-Ml4Odgi4nu', type: 'drive', dateAdded: '2024-02-10' }
                     ],
                     lectures: [
-                        { id: '1', name: 'Introduction to Microprocessors', link: 'https://youtube.com/micro-lecture1', type: 'youtube', dateAdded: '2024-01-08' }
+                        { id: '1', name: 'Dr Khaldoon', link: 'https://youtu.be/yh07bTgpYKA?list=PLmg2_0P-K4sFo7rUyo5WhWXBlo3C5MOG7', type: 'youtube', dateAdded: '2024-01-08' }
                     ],
                     assignments: [
-                        { id: '1', name: 'Microcontroller Programming', link: 'https://drive.google.com/micro-assignment1', type: 'drive', dateAdded: '2024-01-30' }
+                        { id: '1', name: 'Microprocessor Assignments', link: 'https://drive.google.com/drive/u/0/folders/10fHyFYJVqExKCUakJHY7K9drwapapb60', type: 'drive', dateAdded: '2024-01-30' }
                     ]
                 },
                 {
@@ -131,13 +131,13 @@ const Resources: React.FC = () => {
                     color: '#FF5722',
                     description: 'Computer system organization and design principles',
                     quizzes: [
-                        { id: '1', name: 'Data Path Design Quiz', link: 'https://drive.google.com/cod-quiz1', type: 'drive', dateAdded: '2024-01-22' }
+                        { id: '1', name: 'Orga Quiz', link: 'https://drive.google.com/drive/folders/1YNq3kCJBZaKU5dsKgR-Lj9HyAuHGRXVv', type: 'drive', dateAdded: '2024-01-22' }
                     ],
                     exams: [
-                        { id: '1', name: 'System Design Exam', link: 'https://drive.google.com/cod-exam1', type: 'drive', dateAdded: '2024-02-15' }
+                        { id: '1', name: 'Exams', link: 'https://drive.google.com/drive/folders/1gYZCA03-Bs8Fknbl7h8-f9Dz2IXZVOeM', type: 'drive', dateAdded: '2024-02-15' }
                     ],
                     lectures: [
-                        { id: '1', name: 'Computer Organization Basics', link: 'https://youtube.com/cod-lecture1', type: 'youtube', dateAdded: '2024-01-05' }
+                        { id: '1', name: 'Prof Osama Alkhalil', link: 'https://youtu.be/R7YJn8V6pAk?list=PLy42_pl2XRL74uSKD9DkiJ11GOPyluXsR', type: 'youtube', dateAdded: '2024-01-05' }
                     ],
                     assignments: [
                         { id: '1', name: 'System Design Project', link: 'https://drive.google.com/cod-assignment1', type: 'drive', dateAdded: '2024-01-28' }
@@ -150,13 +150,13 @@ const Resources: React.FC = () => {
                     color: '#F44336',
                     description: 'Real-time systems and embedded programming',
                     quizzes: [
-                        { id: '1', name: 'Real-time Systems Quiz', link: 'https://drive.google.com/embed-quiz1', type: 'drive', dateAdded: '2024-01-25' }
+                        { id: '1', name: 'Quizzez', link: 'https://drive.google.com/drive/u/0/folders/1P0gJNtDPL39THln-7xv2nzlxkB0t7pHY?fbclid=IwAR3HTS0AZdjiPl8bgr0wfSXksS-xbp00WH3FQvzbg-FJqgShN7UYagx7YsI', type: 'drive', dateAdded: '2024-01-25' }
                     ],
                     exams: [
-                        { id: '1', name: 'Embedded Systems Exam', link: 'https://drive.google.com/embed-exam1', type: 'drive', dateAdded: '2024-02-20' }
+                        { id: '1', name: 'Embedded Systems Exam', link: 'https://drive.google.com/drive/folders/1BghpyO-WwFBu3i2FmcaVFSESclNsBeNR?fbclid=IwAR06lJAvfYt0UVeWK0liX5QQiIpa21LfcmYGGftOw-UtrnXoXF8Oo6b3w1g', type: 'drive', dateAdded: '2024-02-20' }
                     ],
                     lectures: [
-                        { id: '1', name: 'Introduction to Embedded Systems', link: 'https://youtube.com/embed-lecture1', type: 'youtube', dateAdded: '2024-01-03' }
+                        { id: '1', name: 'Introduction to Embedded Systems - Prof Osama Alkhalil', link: 'https://youtu.be/4d4WXzQv3Xs?list=PLuB2827yobpzbR4988f88KXpZ-L9o7tNE', type: 'youtube', dateAdded: '2024-01-03' }
                     ],
                     assignments: [
                         { id: '1', name: 'IoT Device Programming', link: 'https://drive.google.com/embed-assignment1', type: 'drive', dateAdded: '2024-02-01' }
@@ -169,16 +169,16 @@ const Resources: React.FC = () => {
                     color: '#4CAF50',
                     description: 'Machine learning and intelligent systems',
                     quizzes: [
-                        { id: '1', name: 'ML Algorithms Quiz', link: 'https://drive.google.com/ai-quiz1', type: 'drive', dateAdded: '2024-01-20' }
+                        { id: '1', name: 'Quizzez', link: 'https://drive.google.com/drive/folders/1qWY_nutYnzAHqMD7rjhsTYKCDUejnVan?fbclid=IwAR2zYHJYKSd6jrBaoBWYkv5sqitjCDdl19p8NZfy_VVE-_b1LD9wJdbiztw', type: 'drive', dateAdded: '2024-01-20' }
                     ],
                     exams: [
-                        { id: '1', name: 'AI Fundamentals Exam', link: 'https://drive.google.com/ai-exam1', type: 'drive', dateAdded: '2024-02-12' }
+                        { id: '1', name: 'AI Final Exams', link: 'https://drive.google.com/drive/folders/1WSAA_akriOo0u8USEnvOEDoDg_fHracS?fbclid=IwAR1ZITs7uhVkbynErilCNpEbL0dho2OLo6K-1oVxb1B0t9reooeYbMGmpDA', type: 'drive', dateAdded: '2024-02-12' }
                     ],
                     lectures: [
-                        { id: '1', name: 'AI and Machine Learning', link: 'https://youtube.com/ai-lecture1', type: 'youtube', dateAdded: '2024-01-07' }
+                        { id: '1', name: 'Dr Inad Aljarrah', link: 'https://youtu.be/q1pt6I0uDFg?list=PLOJ_ZHK5bDAmyAjlq2T23TCSKCBDDErF2', type: 'youtube', dateAdded: '2024-01-07' }
                     ],
                     assignments: [
-                        { id: '1', name: 'Neural Network Implementation', link: 'https://drive.google.com/ai-assignment1', type: 'drive', dateAdded: '2024-01-26' }
+                        { id: '1', name: 'Assignment 1', link: 'https://drive.google.com/drive/folders/1bWkuBjMTo3t9l6tcb6Wo71rP2M6-nadi?fbclid=IwAR2xZ7pMEQucJYmJOHOMXXArX9yzS9ecftepwBgXFCsysV1GbSMDe6wTWgc', type: 'drive', dateAdded: '2024-01-26' }
                     ]
                 },
                 {
@@ -188,16 +188,16 @@ const Resources: React.FC = () => {
                     color: '#FF9800',
                     description: 'Digital image analysis and computer vision',
                     quizzes: [
-                        { id: '1', name: 'Image Filters Quiz', link: 'https://drive.google.com/img-quiz1', type: 'drive', dateAdded: '2024-01-17' }
+                        { id: '1', name: 'Quiz 1', link: 'https://drive.google.com/drive/u/0/folders/10F1_sJp1A7jU1NPY_0Jcc5MWcsHF6k2B?fbclid=IwAR3iH7Yl0GHtjA641jmx0cIGf-QNR23c95bf9tzlK1Zl1EMuAcQJQW3Qk2o', type: 'drive', dateAdded: '2024-01-17' }
                     ],
                     exams: [
-                        { id: '1', name: 'Computer Vision Exam', link: 'https://drive.google.com/img-exam1', type: 'drive', dateAdded: '2024-02-08' }
+                        { id: '1', name: 'Midterm Exams', link: 'https://drive.google.com/drive/folders/1cnOzqIBFz_ajwkbinhXM6ximoSEnvoy0?fbclid=IwAR0VUGEttWlxrzAzZexVMkszxqThsyhCdBI68SmWdYnIG0LrmO5mG0-3x6w', type: 'drive', dateAdded: '2024-02-08' }
                     ],
                     lectures: [
-                        { id: '1', name: 'Introduction to Image Processing', link: 'https://youtube.com/img-lecture1', type: 'youtube', dateAdded: '2024-01-02' }
+                        { id: '1', name: 'Dr Inad Aljarrah', link: 'https://youtu.be/UlozlvarG9A?list=PLDH812HWn6H1Sl6elrPznON2mOgo1tnxm', type: 'youtube', dateAdded: '2024-01-02' }
                     ],
                     assignments: [
-                        { id: '1', name: 'Image Enhancement Project', link: 'https://drive.google.com/img-assignment1', type: 'drive', dateAdded: '2024-01-24' }
+                        { id: '1', name: 'Image Processing Assignments', link: 'https://drive.google.com/drive/u/0/folders/1Xy7t3JSsPVMkwThTHIXkOSqqTRQwgW9R?fbclid=IwAR23k51VID5SK0lnUqESrHifv3SHZGU4kL0QCi7KAdKiBWKJt-JQXz6Z5UQ', type: 'drive', dateAdded: '2024-01-24' }
                     ]
                 }
             ]
