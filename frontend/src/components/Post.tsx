@@ -900,39 +900,176 @@ const Post: React.FC<PostProps> = ({ post }) => {
                 </DialogContent>
             </Dialog>
 
-            <Dialog open={likesDialogOpen} onClose={handleCloseLikesDialog}>
-                <DialogTitle>Liked by</DialogTitle>
-                <DialogContent>
-                    {loadingLikes ? (
-                        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 80 }}>
-                            <CircularProgress />
+            <Dialog 
+                open={likesDialogOpen} 
+                onClose={handleCloseLikesDialog}
+                TransitionComponent={SlideTransition}
+                maxWidth="sm"
+                fullWidth
+                PaperProps={{
+                    sx: {
+                        borderRadius: 3,
+                        overflow: 'hidden',
+                        maxHeight: '85vh',
+                        background: 'linear-gradient(135deg, rgba(29, 161, 242, 0.05) 0%, rgba(29, 161, 242, 0.02) 100%)',
+                        backdropFilter: 'blur(10px)',
+                        border: '1px solid rgba(29, 161, 242, 0.1)',
+                    }
+                }}
+                BackdropProps={{
+                    sx: {
+                        backdropFilter: 'blur(4px)',
+                        backgroundColor: 'rgba(0,0,0,0.3)'
+                    }
+                }}
+            >
+                <Box sx={{ 
+                    position: 'sticky', 
+                    top: 0, 
+                    background: 'inherit', 
+                    zIndex: 1,
+                    backdropFilter: 'blur(10px)',
+                    borderBottom: '1px solid rgba(29, 161, 242, 0.1)'
+                }}>
+                    <DialogTitle sx={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'space-between',
+                        py: 2,
+                        px: 3,
+                        background: 'transparent'
+                    }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <FavoriteIcon sx={{ color: 'error.main' }} />
+                            <Typography variant="h6" fontWeight="600">
+                                Liked by
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary" sx={{ 
+                                backgroundColor: 'rgba(244, 67, 54, 0.1)',
+                                px: 1.5,
+                                py: 0.5,
+                                borderRadius: 10,
+                                fontWeight: 500
+                            }}>
+                                {likeUsers.length}
+                            </Typography>
                         </Box>
-                    ) : (
-                        <Box>
-                            {likeUsers.length === 0 && (
-                                <Typography variant="body2" color="text.secondary">No likes yet.</Typography>
-                            )}
-                            {likeUsers.map((likeUser) => (
-                                <Box key={likeUser.id} sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                                    <Avatar
-                                        src={likeUser.profilePicture?.data
-                                            ? `data:${likeUser.profilePicture.type};base64,${likeUser.profilePicture.data}`
-                                            : undefined}
-                                        alt={likeUser.username}
-                                        sx={{ width: 32, height: 32, bgcolor: likeUser.profilePicture ? 'transparent' : 'grey.400', cursor: 'pointer' }}
-                                        onClick={() => navigate(`/profile/${likeUser.username}`)}
-                                    />
-                                    <Typography variant="body2" fontWeight="bold">
-                                        {likeUser.username}
-                                    </Typography>
-                                </Box>
-                            ))}
-                        </Box>
-                    )}
+                        <IconButton 
+                            onClick={handleCloseLikesDialog}
+                            sx={{ 
+                                color: 'text.secondary',
+                                '&:hover': {
+                                    backgroundColor: 'rgba(244, 67, 54, 0.1)',
+                                    color: 'error.main'
+                                }
+                            }}
+                        >
+                            <CloseIcon />
+                        </IconButton>
+                    </DialogTitle>
+                </Box>
+                
+                <DialogContent sx={{ px: 0, py: 0 }}>
+                    <Box sx={{ px: 3, py: 2 }}>
+                        {loadingLikes ? (
+                            <Box sx={{ 
+                                display: 'flex', 
+                                justifyContent: 'center', 
+                                alignItems: 'center', 
+                                minHeight: 120,
+                                flexDirection: 'column',
+                                gap: 2
+                            }}>
+                                <CircularProgress color="error" />
+                                <Typography variant="body2" color="text.secondary">
+                                    Loading likes...
+                                </Typography>
+                            </Box>
+                        ) : likeUsers.length === 0 ? (
+                            <Box sx={{ 
+                                textAlign: 'center', 
+                                py: 6,
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                gap: 2
+                            }}>
+                                <FavoriteBorderIcon sx={{ fontSize: 48, color: 'text.disabled' }} />
+                                <Typography variant="body1" color="text.secondary">
+                                    No likes yet
+                                </Typography>
+                                <Typography variant="body2" color="text.disabled">
+                                    Be the first to like this post!
+                                </Typography>
+                            </Box>
+                        ) : (
+                            <Box sx={{ maxHeight: '50vh', overflowY: 'auto', pr: 1 }}>
+                                {likeUsers.map((likeUser, index) => (
+                                    <Fade in={true} timeout={300 + (index * 100)} key={likeUser.id}>
+                                        <Paper
+                                            elevation={0}
+                                            sx={{
+                                                mb: 2,
+                                                p: 2,
+                                                borderRadius: 2,
+                                                backgroundColor: 'background.paper',
+                                                border: '1px solid',
+                                                borderColor: 'divider',
+                                                cursor: 'pointer',
+                                                transition: 'all 0.2s ease-in-out',
+                                                '&:hover': {
+                                                    borderColor: 'error.main',
+                                                    backgroundColor: 'rgba(244, 67, 54, 0.02)',
+                                                    transform: 'translateY(-1px)',
+                                                    boxShadow: '0 4px 12px rgba(244, 67, 54, 0.15)'
+                                                }
+                                            }}
+                                            onClick={() => navigate(`/profile/${likeUser.username}`)}
+                                        >
+                                            <Box sx={{ 
+                                                display: 'flex', 
+                                                alignItems: 'center', 
+                                                gap: 2 
+                                            }}>
+                                                <Avatar
+                                                    src={likeUser.profilePicture?.data 
+                                                        ? `data:${likeUser.profilePicture.type};base64,${likeUser.profilePicture.data}` 
+                                                        : undefined}
+                                                    alt={likeUser.username}
+                                                    sx={{ 
+                                                        width: 48, 
+                                                        height: 48,
+                                                        border: '2px solid rgba(244, 67, 54, 0.1)',
+                                                        transition: 'all 0.2s ease',
+                                                        '&:hover': {
+                                                            borderColor: 'error.main',
+                                                            transform: 'scale(1.05)'
+                                                        }
+                                                    }}
+                                                />
+                                                <Box sx={{ flex: 1 }}>
+                                                    <Typography 
+                                                        variant="subtitle1" 
+                                                        fontWeight="600"
+                                                        sx={{
+                                                            color: 'text.primary',
+                                                            transition: 'color 0.2s ease',
+                                                            '&:hover': {
+                                                                color: 'error.main'
+                                                            }
+                                                        }}
+                                                    >
+                                                        {likeUser.username}
+                                                    </Typography>
+                                                </Box>
+                                            </Box>
+                                        </Paper>
+                                    </Fade>
+                                ))}
+                            </Box>
+                        )}
+                    </Box>
                 </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleCloseLikesDialog}>Close</Button>
-                </DialogActions>
             </Dialog>
 
             <Dialog
