@@ -650,7 +650,7 @@ const Resources: React.FC = () => {
                     ) : (
                         <Grid container spacing={3}>
                             {getCurrentResources().map((resource, index) => (
-                                <Grid size={{ xs: 12, sm: 6, md: 4 }} key={resource.id}>
+                                <Grid size={{ xs: 12 }} key={resource.id}>
                                     <Card
                                         elevation={0}
                                         sx={{
