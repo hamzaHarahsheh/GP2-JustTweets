@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { userService, likeService, commentService } from '../services/api';
-import { Post as PostType, User, Like, Comment } from '../types';
+import { userService, likeService, commentService, roleService } from '../services/api';
+import { Post as PostType, User, Like, Comment, Role } from '../types';
 import {
     Box,
     Card,
@@ -23,6 +23,10 @@ import {
     Paper,
     Fade,
     InputAdornment,
+    Menu,
+    MenuItem,
+    ListItemIcon,
+    ListItemText,
 } from '@mui/material';
 import {
     Favorite as FavoriteIcon,
@@ -31,6 +35,11 @@ import {
     Share as ShareIcon,
     Send as SendIcon,
     Close as CloseIcon,
+    MoreVert as MoreVertIcon,
+    Edit as EditIcon,
+    Delete as DeleteIcon,
+    Save as SaveIcon,
+    Cancel as CancelIcon,
 } from '@mui/icons-material';
 import CircularProgress from '@mui/material/CircularProgress';
 import { TransitionProps } from '@mui/material/transitions';
@@ -49,6 +58,89 @@ const SlideTransition = React.forwardRef(function Transition(
     return <Slide direction="up" ref={ref} {...props} />;
 });
 
+interface CommentActionsProps {
+    comment: Comment;
+    canEdit: boolean;
+    canDelete: boolean;
+    onEdit: (commentId: string, content: string) => void;
+    onDelete: (commentId: string) => void;
+}
+
+const CommentActions: React.FC<CommentActionsProps> = ({
+    comment,
+    canEdit,
+    canDelete,
+    onEdit,
+    onDelete,
+}) => {
+    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+
+    const handleClick = (event: React.MouseEvent<HTMLElement>) => {
+        event.stopPropagation();
+        setAnchorEl(event.currentTarget);
+    };
+
+    const handleClose = () => {
+        setAnchorEl(null);
+    };
+
+    const handleEdit = () => {
+        onEdit(comment.id, comment.content);
+        handleClose();
+    };
+
+    const handleDelete = () => {
+        onDelete(comment.id);
+        handleClose();
+    };
+
+    return (
+        <>
+            <IconButton
+                onClick={handleClick}
+                size="small"
+                sx={{
+                    color: 'text.secondary',
+                    '&:hover': {
+                        backgroundColor: 'rgba(29, 161, 242, 0.1)',
+                        color: 'primary.main'
+                    }
+                }}
+            >
+                <MoreVertIcon fontSize="small" />
+            </IconButton>
+            <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={handleClose}
+                PaperProps={{
+                    sx: {
+                        borderRadius: 2,
+                        minWidth: 120,
+                    }
+                }}
+            >
+                {canEdit && (
+                    <MenuItem onClick={handleEdit}>
+                        <ListItemIcon>
+                            <EditIcon fontSize="small" />
+                        </ListItemIcon>
+                        <ListItemText>Edit</ListItemText>
+                    </MenuItem>
+                )}
+                {canDelete && (
+                    <MenuItem onClick={handleDelete} sx={{ color: 'error.main' }}>
+                        <ListItemIcon>
+                            <DeleteIcon fontSize="small" sx={{ color: 'error.main' }} />
+                        </ListItemIcon>
+                        <ListItemText>Delete</ListItemText>
+                    </MenuItem>
+                )}
+            </Menu>
+        </>
+    );
+};
+
 const Post: React.FC<PostProps> = ({ post }) => {
     const navigate = useNavigate();
     const { user } = useAuth();
@@ -63,6 +155,9 @@ const Post: React.FC<PostProps> = ({ post }) => {
     const [loadingLikes, setLoadingLikes] = useState(false);
     const [openImageDialog, setOpenImageDialog] = useState(false);
     const [dialogImageUrl, setDialogImageUrl] = useState<string | null>(null);
+    const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+    const [editingCommentContent, setEditingCommentContent] = useState('');
+    const [role, setRole] = useState<Role | null>(null);
 
     const theme = useTheme();
 
@@ -148,6 +243,69 @@ const Post: React.FC<PostProps> = ({ post }) => {
         setLikesDialogOpen(false);
         setLikeUsers([]);
     };
+
+    const handleEditComment = (commentId: string, content: string) => {
+        if (!commentId || content === undefined || content === null) {
+            console.error('Invalid comment data for editing');
+            return;
+        }
+        setEditingCommentId(commentId);
+        setEditingCommentContent(content);
+    };
+
+    const handleSaveComment = async () => {
+        if (!user || !editingCommentContent.trim() || !editingCommentId) return;
+
+        try {
+            const updatedComment = await commentService.updateComment(editingCommentId, editingCommentContent);
+            setComments(comments.map(comment =>
+                comment.id === editingCommentId ? { ...comment, ...updatedComment } : comment
+            ));
+            setEditingCommentId(null);
+            setEditingCommentContent('');
+        } catch (error) {
+            console.error('Failed to update comment:', error);
+        }
+    };
+
+    const handleDeleteComment = async (commentId: string) => {
+        if (!user || !commentId) return;
+
+        try {
+            await commentService.deleteComment(commentId);
+            setComments(comments.filter(comment => comment.id !== commentId));
+        } catch (error) {
+            console.error('Failed to delete comment:', error);
+        }
+    };
+
+    const canEditComment = (comment: Comment): boolean => {
+        if (!user || !comment) return false;
+        if (comment.userId === user.id) return true;
+        if (role?.type === 'ADMIN') return true;
+        return false;
+    };
+
+    const canDeleteComment = (comment: Comment): boolean => {
+        if (!user || !comment) return false;
+        if (comment.userId === user.id) return true;
+        if (post.userId === user.id) return true;
+        if (role?.type === 'ADMIN') return true;
+        return false;
+    };
+
+    useEffect(() => {
+        const loadUserRole = async () => {
+            if (!user) return;
+            try {
+                const roles = await roleService.getUserRoles(user.id);
+                setRole(roles.length > 0 ? roles[0] : null);
+            } catch (error) {
+                console.error('Failed to load user roles:', error);
+            }
+        };
+        loadUserRole();
+    }, [user]);
 
     const profilePicUrl = postUser?.profilePicture?.data
         ? `data:${postUser.profilePicture.type};base64,${postUser.profilePicture.data}`
@@ -376,7 +534,7 @@ const Post: React.FC<PostProps> = ({ post }) => {
                             >
                                 <Avatar
                                     src={comment.profilePictureUrl ? `http://localhost:8081${comment.profilePictureUrl}` : undefined}
-                                    alt={comment.username}
+                                    alt={comment.username || 'User'}
                                     sx={{ 
                                         width: 36, 
                                         height: 36, 
@@ -389,7 +547,7 @@ const Post: React.FC<PostProps> = ({ post }) => {
                                     }}
                                     onClick={() => navigate(`/profile/${comment.username}`)}
                                 >
-                                    {!comment.profilePictureUrl && comment.username[0].toUpperCase()}
+                                    {!comment.profilePictureUrl && comment.username?.[0]?.toUpperCase()}
                                 </Avatar>
                                 <Typography 
                                     variant="body2" 
@@ -401,10 +559,10 @@ const Post: React.FC<PostProps> = ({ post }) => {
                                     }}
                                     onClick={() => navigate(`/profile/${comment.username}`)}
                                 >
-                                    @{comment.username}
+                                    @{comment.username || 'Unknown'}
                                 </Typography>
                                 <Typography variant="body2" sx={{ flex: 1 }}>
-                                    {comment.content}
+                                    {comment.content || ''}
                                 </Typography>
                             </Box>
                         ))}
@@ -517,7 +675,9 @@ const Post: React.FC<PostProps> = ({ post }) => {
                             </Box>
                         ) : (
                             <Box sx={{ maxHeight: '40vh', overflowY: 'auto', pr: 1 }}>
-                                {comments.map((comment, index) => (
+                                {comments
+                                    .filter(comment => comment && comment.id && comment.username)
+                                    .map((comment, index) => (
                                     <Fade in={true} timeout={300 + (index * 100)} key={comment.id}>
                                         <Paper
                                             elevation={0}
@@ -540,7 +700,7 @@ const Post: React.FC<PostProps> = ({ post }) => {
                                             <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
                                                 <Avatar
                                                     src={comment.profilePictureUrl ? `http://localhost:8081${comment.profilePictureUrl}` : undefined}
-                                                    alt={comment.username}
+                                                    alt={comment.username || 'User'}
                                                     sx={{ 
                                                         width: 40, 
                                                         height: 40, 
@@ -555,33 +715,79 @@ const Post: React.FC<PostProps> = ({ post }) => {
                                                     }}
                                                     onClick={() => navigate(`/profile/${comment.username}`)}
                                                 >
-                                                    {!comment.profilePictureUrl && comment.username[0].toUpperCase()}
+                                                    {!comment.profilePictureUrl && comment.username?.[0]?.toUpperCase()}
                                                 </Avatar>
                                                 <Box sx={{ flex: 1 }}>
-                                                    <Typography 
-                                                        variant="subtitle2" 
-                                                        fontWeight="600"
-                                                        sx={{ 
-                                                            cursor: 'pointer',
-                                                            color: 'primary.main',
-                                                            '&:hover': {
-                                                                textDecoration: 'underline'
-                                                            }
-                                                        }}
-                                                        onClick={() => navigate(`/profile/${comment.username}`)}
-                                                    >
-                                                        @{comment.username}
-                                                    </Typography>
-                                                    <Typography 
-                                                        variant="body2" 
-                                                        sx={{ 
-                                                            mt: 0.5,
-                                                            lineHeight: 1.6,
-                                                            wordBreak: 'break-word'
-                                                        }}
-                                                    >
-                                                        {comment.content}
-                                                    </Typography>
+                                                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                        <Typography 
+                                                            variant="subtitle2" 
+                                                            fontWeight="600"
+                                                            sx={{ 
+                                                                cursor: 'pointer',
+                                                                color: 'primary.main',
+                                                                '&:hover': {
+                                                                    textDecoration: 'underline'
+                                                                }
+                                                            }}
+                                                            onClick={() => navigate(`/profile/${comment.username}`)}
+                                                        >
+                                                            @{comment.username || 'Unknown'}
+                                                        </Typography>
+                                                        {(canEditComment(comment) || canDeleteComment(comment)) && (
+                                                            <CommentActions 
+                                                                comment={comment}
+                                                                canEdit={canEditComment(comment)}
+                                                                canDelete={canDeleteComment(comment)}
+                                                                onEdit={handleEditComment}
+                                                                onDelete={handleDeleteComment}
+                                                            />
+                                                        )}
+                                                    </Box>
+                                                    {editingCommentId === comment.id ? (
+                                                        <Box sx={{ mt: 1 }}>
+                                                            <TextField
+                                                                fullWidth
+                                                                multiline
+                                                                rows={2}
+                                                                value={editingCommentContent}
+                                                                onChange={(e) => setEditingCommentContent(e.target.value)}
+                                                                variant="outlined"
+                                                                size="small"
+                                                                sx={{ mb: 1 }}
+                                                            />
+                                                            <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+                                                                <IconButton
+                                                                    onClick={() => {
+                                                                        setEditingCommentId(null);
+                                                                        setEditingCommentContent('');
+                                                                    }}
+                                                                    size="small"
+                                                                    sx={{ color: 'text.secondary' }}
+                                                                >
+                                                                    <CancelIcon />
+                                                                </IconButton>
+                                                                <IconButton
+                                                                    onClick={handleSaveComment}
+                                                                    size="small"
+                                                                    sx={{ color: 'primary.main' }}
+                                                                    disabled={!editingCommentContent.trim()}
+                                                                >
+                                                                    <SaveIcon />
+                                                                </IconButton>
+                                                            </Box>
+                                                        </Box>
+                                                    ) : (
+                                                        <Typography 
+                                                            variant="body2" 
+                                                            sx={{ 
+                                                                mt: 0.5,
+                                                                lineHeight: 1.6,
+                                                                wordBreak: 'break-word'
+                                                            }}
+                                                        >
+                                                            {comment.content || ''}
+                                                        </Typography>
+                                                    )}
                                                 </Box>
                                             </Box>
                                         </Paper>

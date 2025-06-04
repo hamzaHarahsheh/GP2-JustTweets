@@ -67,4 +67,10 @@ export interface Follow {
     followerId: string;
     followingId: string;
     createdAt: Date;
+}
+
+export interface Role {
+    id: string;
+    type: string;
+    userId: string;
 } 

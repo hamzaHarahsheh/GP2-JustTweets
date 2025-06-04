@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { LoginCredentials, LoginResponse, RegisterCredentials, Post, Comment, Like, User } from '../types';
+import { LoginCredentials, LoginResponse, RegisterCredentials, Post, Comment, Like, User, Role } from '../types';
 
 interface Notification {
     id: string;
@@ -129,6 +129,15 @@ export const commentService = {
         const response = await api.post<Comment>('/comments/add', comment);
         return response.data;
     },
+
+    updateComment: async (commentId: string, content: string): Promise<Comment> => {
+        const response = await api.put<Comment>(`/comments/${commentId}`, { content });
+        return response.data;
+    },
+
+    deleteComment: async (commentId: string): Promise<void> => {
+        await api.delete(`/comments/${commentId}`);
+    },
 };
 
 export const likeService = {
@@ -222,6 +231,13 @@ export const notificationService = {
 
     markAllAsRead: async (userId: string): Promise<void> => {
         await api.put(`/likes/notifications/read/all/${userId}`);
+    },
+};
+
+export const roleService = {
+    getUserRoles: async (userId: string): Promise<Role[]> => {
+        const response = await api.get<Role[]>(`/roles/user/${userId}`);
+        return response.data;
     },
 };
 

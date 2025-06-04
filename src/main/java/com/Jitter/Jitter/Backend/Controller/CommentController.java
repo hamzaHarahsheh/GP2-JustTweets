@@ -5,13 +5,17 @@ import com.Jitter.Jitter.Backend.Models.Post;
 import com.Jitter.Jitter.Backend.Models.Follow;
 import com.Jitter.Jitter.Backend.DTO.CommentDTO;
 import com.Jitter.Jitter.Backend.Models.User;
+import com.Jitter.Jitter.Backend.Models.Role;
 import com.Jitter.Jitter.Backend.Repository.CommentRepository;
 import com.Jitter.Jitter.Backend.Repository.PostRepository;
+import com.Jitter.Jitter.Backend.Repository.RoleRepository;
 import com.Jitter.Jitter.Backend.Service.CommentService;
 import com.Jitter.Jitter.Backend.Service.NotificationService;
 import com.Jitter.Jitter.Backend.Service.FollowService;
 import com.Jitter.Jitter.Backend.Service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
@@ -40,6 +44,9 @@ public class CommentController {
 
     @Autowired
     private FollowService followService;
+
+    @Autowired
+    private RoleRepository roleRepository;
 
     @PostMapping("/add")
     public CommentDTO addComment(@RequestBody Comment comment, Principal principal) {
@@ -105,13 +112,69 @@ public class CommentController {
     }
 
     @PutMapping("/{id}")
-    public Comment updateComment(@PathVariable String id, @RequestBody Comment updatedComment) {
-        updatedComment.setId(id);
-        return commentRepo.save(updatedComment);
+    public ResponseEntity<?> updateComment(@PathVariable String id, @RequestBody Comment updatedComment, Principal principal) {
+        String username = principal.getName();
+        User currentUser = userService.getByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found for username: " + username));
+
+        Optional<Comment> existingCommentOpt = commentRepo.findById(id);
+        if (!existingCommentOpt.isPresent()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Comment existingComment = existingCommentOpt.get();
+        
+        boolean canEdit = false;
+        if (existingComment.getUserId().equals(currentUser.getId())) {
+            canEdit = true;
+        } else {
+            List<Role> roles = roleRepository.findByUserId(currentUser.getId());
+            canEdit = roles.stream().anyMatch(role -> "ADMIN".equals(role.getType()));
+        }
+
+        if (!canEdit) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body("You don't have permission to edit this comment");
+        }
+
+        existingComment.setContent(updatedComment.getContent());
+        Comment saved = commentRepo.save(existingComment);
+        return ResponseEntity.ok(saved);
     }
 
     @DeleteMapping("/{id}")
-    public void deleteComment(@PathVariable String id) {
+    public ResponseEntity<?> deleteComment(@PathVariable String id, Principal principal) {
+        String username = principal.getName();
+        User currentUser = userService.getByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found for username: " + username));
+
+        Optional<Comment> existingCommentOpt = commentRepo.findById(id);
+        if (!existingCommentOpt.isPresent()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Comment existingComment = existingCommentOpt.get();
+        
+        boolean canDelete = false;
+        
+        if (existingComment.getUserId().equals(currentUser.getId())) {
+            canDelete = true;
+        } else {
+            Optional<Post> postOpt = postRepository.findById(existingComment.getPostId());
+            if (postOpt.isPresent() && postOpt.get().getUserId().equals(currentUser.getId())) {
+                canDelete = true;
+            } else {
+                List<Role> roles = roleRepository.findByUserId(currentUser.getId());
+                canDelete = roles.stream().anyMatch(role -> "ADMIN".equals(role.getType()));
+            }
+        }
+
+        if (!canDelete) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body("You don't have permission to delete this comment");
+        }
+
         commentRepo.deleteById(id);
+        return ResponseEntity.ok().build();
     }
 }
