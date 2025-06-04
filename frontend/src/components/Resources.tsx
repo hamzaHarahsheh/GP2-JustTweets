@@ -10,10 +10,11 @@ import {
     Tab, 
     Tabs,
     Grid,
-    Button,
     Avatar,
     Divider,
-    Stack
+    Stack,
+    Fade,
+    Popper
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { 
@@ -30,13 +31,16 @@ import {
     Assignment,
     Launch,
     ArrowBack,
-    CloudDownload
+    CloudDownload,
+    YouTube,
+    Facebook
 } from '@mui/icons-material';
 
 interface Resource {
     id: string;
     name: string;
-    driveLink: string;
+    link: string;
+    type: 'drive' | 'youtube' | 'facebook';
     dateAdded: string;
 }
 
@@ -65,6 +69,9 @@ const Resources: React.FC = () => {
     const [selectedMajor, setSelectedMajor] = useState<Major | null>(null);
     const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
     const [selectedTab, setSelectedTab] = useState(0);
+    const [popupOpen, setPopupOpen] = useState(false);
+    const [popupAnchor, setPopupAnchor] = useState<HTMLElement | null>(null);
+    const [hoveredResource, setHoveredResource] = useState<Resource | null>(null);
     const theme = useTheme();
 
     const majors: Major[] = [
@@ -82,20 +89,20 @@ const Resources: React.FC = () => {
                     color: '#2196F3',
                     description: 'Processor design and computer organization',
                     quizzes: [
-                        { id: '1', name: 'CPU Design Quiz', driveLink: 'https://drive.google.com/quiz1', dateAdded: '2024-01-15' },
-                        { id: '2', name: 'Memory Hierarchy Quiz', driveLink: 'https://drive.google.com/quiz2', dateAdded: '2024-01-20' }
+                        { id: '1', name: 'CPU Design Quiz', link: 'https://drive.google.com/quiz1', type: 'drive', dateAdded: '2024-01-15' },
+                        { id: '2', name: 'Memory Hierarchy Quiz', link: 'https://drive.google.com/quiz2', type: 'drive', dateAdded: '2024-01-20' }
                     ],
                     exams: [
-                        { id: '1', name: 'Midterm Exam', driveLink: 'https://drive.google.com/exam1', dateAdded: '2024-02-01' },
-                        { id: '2', name: 'Final Exam', driveLink: 'https://drive.google.com/exam2', dateAdded: '2024-03-15' }
+                        { id: '1', name: 'Midterm Exam', link: 'https://drive.google.com/exam1', type: 'drive', dateAdded: '2024-02-01' },
+                        { id: '2', name: 'Final Exam', link: 'https://drive.google.com/exam2', type: 'drive', dateAdded: '2024-03-15' }
                     ],
                     lectures: [
-                        { id: '1', name: 'Introduction to Computer Architecture', driveLink: 'https://drive.google.com/lecture1', dateAdded: '2024-01-10' },
-                        { id: '2', name: 'Instruction Set Architecture', driveLink: 'https://drive.google.com/lecture2', dateAdded: '2024-01-25' }
+                        { id: '1', name: 'Introduction to Computer Architecture', link: 'https://youtube.com/lecture1', type: 'youtube', dateAdded: '2024-01-10' },
+                        { id: '2', name: 'Instruction Set Architecture', link: 'https://youtube.com/lecture2', type: 'youtube', dateAdded: '2024-01-25' }
                     ],
                     assignments: [
-                        { id: '1', name: 'Processor Design Project', driveLink: 'https://drive.google.com/assignment1', dateAdded: '2024-01-12' },
-                        { id: '2', name: 'Cache Simulation', driveLink: 'https://drive.google.com/assignment2', dateAdded: '2024-02-05' }
+                        { id: '1', name: 'Processor Design Project', link: 'https://drive.google.com/assignment1', type: 'drive', dateAdded: '2024-01-12' },
+                        { id: '2', name: 'Cache Simulation', link: 'https://drive.google.com/assignment2', type: 'drive', dateAdded: '2024-02-05' }
                     ]
                 },
                 {
@@ -105,16 +112,16 @@ const Resources: React.FC = () => {
                     color: '#9C27B0',
                     description: 'Microprocessor programming and interfacing',
                     quizzes: [
-                        { id: '1', name: 'Assembly Programming Quiz', driveLink: 'https://drive.google.com/micro-quiz1', dateAdded: '2024-01-18' }
+                        { id: '1', name: 'Assembly Programming Quiz', link: 'https://drive.google.com/micro-quiz1', type: 'drive', dateAdded: '2024-01-18' }
                     ],
                     exams: [
-                        { id: '1', name: 'Microprocessor Midterm', driveLink: 'https://drive.google.com/micro-exam1', dateAdded: '2024-02-10' }
+                        { id: '1', name: 'Microprocessor Midterm', link: 'https://drive.google.com/micro-exam1', type: 'drive', dateAdded: '2024-02-10' }
                     ],
                     lectures: [
-                        { id: '1', name: 'Introduction to Microprocessors', driveLink: 'https://drive.google.com/micro-lecture1', dateAdded: '2024-01-08' }
+                        { id: '1', name: 'Introduction to Microprocessors', link: 'https://youtube.com/micro-lecture1', type: 'youtube', dateAdded: '2024-01-08' }
                     ],
                     assignments: [
-                        { id: '1', name: 'Microcontroller Programming', driveLink: 'https://drive.google.com/micro-assignment1', dateAdded: '2024-01-30' }
+                        { id: '1', name: 'Microcontroller Programming', link: 'https://drive.google.com/micro-assignment1', type: 'drive', dateAdded: '2024-01-30' }
                     ]
                 },
                 {
@@ -124,16 +131,16 @@ const Resources: React.FC = () => {
                     color: '#FF5722',
                     description: 'Computer system organization and design principles',
                     quizzes: [
-                        { id: '1', name: 'Data Path Design Quiz', driveLink: 'https://drive.google.com/cod-quiz1', dateAdded: '2024-01-22' }
+                        { id: '1', name: 'Data Path Design Quiz', link: 'https://drive.google.com/cod-quiz1', type: 'drive', dateAdded: '2024-01-22' }
                     ],
                     exams: [
-                        { id: '1', name: 'System Design Exam', driveLink: 'https://drive.google.com/cod-exam1', dateAdded: '2024-02-15' }
+                        { id: '1', name: 'System Design Exam', link: 'https://drive.google.com/cod-exam1', type: 'drive', dateAdded: '2024-02-15' }
                     ],
                     lectures: [
-                        { id: '1', name: 'Computer Organization Basics', driveLink: 'https://drive.google.com/cod-lecture1', dateAdded: '2024-01-05' }
+                        { id: '1', name: 'Computer Organization Basics', link: 'https://youtube.com/cod-lecture1', type: 'youtube', dateAdded: '2024-01-05' }
                     ],
                     assignments: [
-                        { id: '1', name: 'System Design Project', driveLink: 'https://drive.google.com/cod-assignment1', dateAdded: '2024-01-28' }
+                        { id: '1', name: 'System Design Project', link: 'https://drive.google.com/cod-assignment1', type: 'drive', dateAdded: '2024-01-28' }
                     ]
                 },
                 {
@@ -143,16 +150,16 @@ const Resources: React.FC = () => {
                     color: '#F44336',
                     description: 'Real-time systems and embedded programming',
                     quizzes: [
-                        { id: '1', name: 'Real-time Systems Quiz', driveLink: 'https://drive.google.com/embed-quiz1', dateAdded: '2024-01-25' }
+                        { id: '1', name: 'Real-time Systems Quiz', link: 'https://drive.google.com/embed-quiz1', type: 'drive', dateAdded: '2024-01-25' }
                     ],
                     exams: [
-                        { id: '1', name: 'Embedded Systems Exam', driveLink: 'https://drive.google.com/embed-exam1', dateAdded: '2024-02-20' }
+                        { id: '1', name: 'Embedded Systems Exam', link: 'https://drive.google.com/embed-exam1', type: 'drive', dateAdded: '2024-02-20' }
                     ],
                     lectures: [
-                        { id: '1', name: 'Introduction to Embedded Systems', driveLink: 'https://drive.google.com/embed-lecture1', dateAdded: '2024-01-03' }
+                        { id: '1', name: 'Introduction to Embedded Systems', link: 'https://youtube.com/embed-lecture1', type: 'youtube', dateAdded: '2024-01-03' }
                     ],
                     assignments: [
-                        { id: '1', name: 'IoT Device Programming', driveLink: 'https://drive.google.com/embed-assignment1', dateAdded: '2024-02-01' }
+                        { id: '1', name: 'IoT Device Programming', link: 'https://drive.google.com/embed-assignment1', type: 'drive', dateAdded: '2024-02-01' }
                     ]
                 },
                 {
@@ -162,16 +169,16 @@ const Resources: React.FC = () => {
                     color: '#4CAF50',
                     description: 'Machine learning and intelligent systems',
                     quizzes: [
-                        { id: '1', name: 'ML Algorithms Quiz', driveLink: 'https://drive.google.com/ai-quiz1', dateAdded: '2024-01-20' }
+                        { id: '1', name: 'ML Algorithms Quiz', link: 'https://drive.google.com/ai-quiz1', type: 'drive', dateAdded: '2024-01-20' }
                     ],
                     exams: [
-                        { id: '1', name: 'AI Fundamentals Exam', driveLink: 'https://drive.google.com/ai-exam1', dateAdded: '2024-02-12' }
+                        { id: '1', name: 'AI Fundamentals Exam', link: 'https://drive.google.com/ai-exam1', type: 'drive', dateAdded: '2024-02-12' }
                     ],
                     lectures: [
-                        { id: '1', name: 'AI and Machine Learning', driveLink: 'https://drive.google.com/ai-lecture1', dateAdded: '2024-01-07' }
+                        { id: '1', name: 'AI and Machine Learning', link: 'https://youtube.com/ai-lecture1', type: 'youtube', dateAdded: '2024-01-07' }
                     ],
                     assignments: [
-                        { id: '1', name: 'Neural Network Implementation', driveLink: 'https://drive.google.com/ai-assignment1', dateAdded: '2024-01-26' }
+                        { id: '1', name: 'Neural Network Implementation', link: 'https://drive.google.com/ai-assignment1', type: 'drive', dateAdded: '2024-01-26' }
                     ]
                 },
                 {
@@ -181,16 +188,16 @@ const Resources: React.FC = () => {
                     color: '#FF9800',
                     description: 'Digital image analysis and computer vision',
                     quizzes: [
-                        { id: '1', name: 'Image Filters Quiz', driveLink: 'https://drive.google.com/img-quiz1', dateAdded: '2024-01-17' }
+                        { id: '1', name: 'Image Filters Quiz', link: 'https://drive.google.com/img-quiz1', type: 'drive', dateAdded: '2024-01-17' }
                     ],
                     exams: [
-                        { id: '1', name: 'Computer Vision Exam', driveLink: 'https://drive.google.com/img-exam1', dateAdded: '2024-02-08' }
+                        { id: '1', name: 'Computer Vision Exam', link: 'https://drive.google.com/img-exam1', type: 'drive', dateAdded: '2024-02-08' }
                     ],
                     lectures: [
-                        { id: '1', name: 'Introduction to Image Processing', driveLink: 'https://drive.google.com/img-lecture1', dateAdded: '2024-01-02' }
+                        { id: '1', name: 'Introduction to Image Processing', link: 'https://youtube.com/img-lecture1', type: 'youtube', dateAdded: '2024-01-02' }
                     ],
                     assignments: [
-                        { id: '1', name: 'Image Enhancement Project', driveLink: 'https://drive.google.com/img-assignment1', dateAdded: '2024-01-24' }
+                        { id: '1', name: 'Image Enhancement Project', link: 'https://drive.google.com/img-assignment1', type: 'drive', dateAdded: '2024-01-24' }
                     ]
                 }
             ]
@@ -236,8 +243,32 @@ const Resources: React.FC = () => {
         return selectedCourse[tabKey] as Resource[];
     };
 
-    const handleResourceClick = (driveLink: string) => {
-        window.open(driveLink, '_blank');
+    const handleResourceClick = (link: string) => {
+        window.open(link, '_blank');
+    };
+
+    const getResourceIcon = (type: string) => {
+        switch (type) {
+            case 'youtube':
+                return <YouTube />;
+            case 'facebook':
+                return <Facebook />;
+            case 'drive':
+            default:
+                return <CloudDownload />;
+        }
+    };
+
+    const getResourceColor = (type: string) => {
+        switch (type) {
+            case 'youtube':
+                return '#FF0000';
+            case 'facebook':
+                return '#1877F2';
+            case 'drive':
+            default:
+                return selectedCourse?.color || '#1976d2';
+        }
     };
 
     if (!selectedMajor) {
@@ -289,7 +320,9 @@ const Resources: React.FC = () => {
                                         borderRadius: 3,
                                         transition: 'all 0.3s ease',
                                         cursor: 'pointer',
-                                        height: '100%',
+                                        minHeight: 280,
+                                        display: 'flex',
+                                        flexDirection: 'column',
                                         opacity: 0,
                                         animation: `fadeInUp 0.6s ease-out ${index * 0.1}s forwards`,
                                         '@keyframes fadeInUp': {
@@ -310,25 +343,27 @@ const Resources: React.FC = () => {
                                     }}
                                     onClick={() => handleMajorSelect(major)}
                                 >
-                                    <CardContent sx={{ p: 4, textAlign: 'center' }}>
-                                        <Avatar
-                                            sx={{
-                                                width: 80,
-                                                height: 80,
-                                                backgroundColor: major.color,
-                                                mb: 3,
-                                                mx: 'auto',
-                                                boxShadow: `0 8px 24px ${major.color}40`
-                                            }}
-                                        >
-                                            {major.icon}
-                                        </Avatar>
-                                        <Typography variant="h6" fontWeight="600" gutterBottom>
-                                            {major.name}
-                                        </Typography>
-                                        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                                            {major.description}
-                                        </Typography>
+                                    <CardContent sx={{ p: 4, textAlign: 'center', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                                        <Box>
+                                            <Avatar
+                                                sx={{
+                                                    width: 80,
+                                                    height: 80,
+                                                    backgroundColor: major.color,
+                                                    mb: 3,
+                                                    mx: 'auto',
+                                                    boxShadow: `0 8px 24px ${major.color}40`
+                                                }}
+                                            >
+                                                {major.icon}
+                                            </Avatar>
+                                            <Typography variant="h6" fontWeight="600" gutterBottom sx={{ wordWrap: 'break-word', hyphens: 'auto' }}>
+                                                {major.name}
+                                            </Typography>
+                                            <Typography variant="body2" color="text.secondary" sx={{ mb: 3, wordWrap: 'break-word', lineHeight: 1.5 }}>
+                                                {major.description}
+                                            </Typography>
+                                        </Box>
                                         <Chip 
                                             size="small" 
                                             label={`${major.courses.length} Courses`} 
@@ -414,7 +449,9 @@ const Resources: React.FC = () => {
                                         borderRadius: 3,
                                         transition: 'all 0.3s ease',
                                         cursor: 'pointer',
-                                        height: '100%',
+                                        minHeight: 320,
+                                        display: 'flex',
+                                        flexDirection: 'column',
                                         opacity: 0,
                                         animation: `fadeInUp 0.6s ease-out ${index * 0.1}s forwards`,
                                         '@keyframes fadeInUp': {
@@ -435,26 +472,28 @@ const Resources: React.FC = () => {
                                     }}
                                     onClick={() => handleCourseSelect(course)}
                                 >
-                                    <CardContent sx={{ p: 4, textAlign: 'center' }}>
-                                        <Avatar
-                                            sx={{
-                                                width: 80,
-                                                height: 80,
-                                                backgroundColor: course.color,
-                                                mb: 3,
-                                                mx: 'auto',
-                                                boxShadow: `0 8px 24px ${course.color}40`
-                                            }}
-                                        >
-                                            {course.icon}
-                                        </Avatar>
-                                        <Typography variant="h6" fontWeight="600" gutterBottom>
-                                            {course.name}
-                                        </Typography>
-                                        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                                            {course.description}
-                                        </Typography>
-                                        <Stack direction="row" spacing={1} justifyContent="center" flexWrap="wrap">
+                                    <CardContent sx={{ p: 4, textAlign: 'center', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                                        <Box>
+                                            <Avatar
+                                                sx={{
+                                                    width: 80,
+                                                    height: 80,
+                                                    backgroundColor: course.color,
+                                                    mb: 3,
+                                                    mx: 'auto',
+                                                    boxShadow: `0 8px 24px ${course.color}40`
+                                                }}
+                                            >
+                                                {course.icon}
+                                            </Avatar>
+                                            <Typography variant="h6" fontWeight="600" gutterBottom sx={{ wordWrap: 'break-word', hyphens: 'auto', lineHeight: 1.3 }}>
+                                                {course.name}
+                                            </Typography>
+                                            <Typography variant="body2" color="text.secondary" sx={{ mb: 3, wordWrap: 'break-word', lineHeight: 1.5 }}>
+                                                {course.description}
+                                            </Typography>
+                                        </Box>
+                                        <Stack direction="row" spacing={1} justifyContent="center" flexWrap="wrap" gap={1}>
                                             <Chip 
                                                 size="small" 
                                                 label={`${course.quizzes.length} Quizzes`} 
@@ -623,7 +662,8 @@ const Resources: React.FC = () => {
                                             borderRadius: 3,
                                             transition: 'all 0.3s ease',
                                             cursor: 'pointer',
-                                            height: '100%',
+                                            minHeight: 180,
+                                            width: '100%',
                                             opacity: 0,
                                             animation: `fadeInUp 0.6s ease-out ${index * 0.1}s forwards`,
                                             '@keyframes fadeInUp': {
@@ -638,27 +678,50 @@ const Resources: React.FC = () => {
                                             },
                                             '&:hover': {
                                                 transform: 'translateY(-4px)',
-                                                boxShadow: `0 8px 24px ${selectedCourse.color}30`,
-                                                border: `1px solid ${selectedCourse.color}50`
+                                                boxShadow: `0 8px 24px ${getResourceColor(resource.type)}30`,
+                                                border: `1px solid ${getResourceColor(resource.type)}50`
                                             }
                                         }}
-                                        onClick={() => handleResourceClick(resource.driveLink)}
+                                        onClick={() => handleResourceClick(resource.link)}
+                                        onMouseEnter={(e) => {
+                                            setPopupAnchor(e.currentTarget);
+                                            setHoveredResource(resource);
+                                            setPopupOpen(true);
+                                        }}
+                                        onMouseLeave={() => {
+                                            setPopupOpen(false);
+                                            setHoveredResource(null);
+                                            setPopupAnchor(null);
+                                        }}
                                     >
-                                        <CardContent sx={{ p: 3 }}>
-                                            <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 2 }}>
+                                        <CardContent sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
                                                 <Avatar
                                                     sx={{
                                                         width: 48,
                                                         height: 48,
-                                                        backgroundColor: selectedCourse.color,
-                                                        mr: 2,
-                                                        boxShadow: `0 4px 12px ${selectedCourse.color}40`
+                                                        backgroundColor: getResourceColor(resource.type),
+                                                        boxShadow: `0 4px 12px ${getResourceColor(resource.type)}40`,
+                                                        flexShrink: 0
                                                     }}
                                                 >
-                                                    <CloudDownload />
+                                                    {getResourceIcon(resource.type)}
                                                 </Avatar>
                                                 <Box sx={{ flex: 1 }}>
-                                                    <Typography variant="h6" fontWeight="600" gutterBottom>
+                                                    <Typography 
+                                                        variant="h6" 
+                                                        fontWeight="600" 
+                                                        sx={{ 
+                                                            fontSize: '1rem',
+                                                            lineHeight: 1.2,
+                                                            mb: 1,
+                                                            overflow: 'hidden',
+                                                            textOverflow: 'ellipsis',
+                                                            display: '-webkit-box',
+                                                            WebkitLineClamp: 2,
+                                                            WebkitBoxOrient: 'vertical'
+                                                        }}
+                                                    >
                                                         {resource.name}
                                                     </Typography>
                                                     <Chip
@@ -674,9 +737,10 @@ const Resources: React.FC = () => {
                                                 </Box>
                                                 <IconButton
                                                     sx={{
-                                                        color: selectedCourse.color,
+                                                        color: getResourceColor(resource.type),
+                                                        flexShrink: 0,
                                                         '&:hover': {
-                                                            backgroundColor: `${selectedCourse.color}20`,
+                                                            backgroundColor: `${getResourceColor(resource.type)}20`,
                                                             transform: 'scale(1.1)'
                                                         }
                                                     }}
@@ -684,10 +748,12 @@ const Resources: React.FC = () => {
                                                     <Launch />
                                                 </IconButton>
                                             </Box>
-                                            <Divider sx={{ my: 2 }} />
-                                            <Typography variant="caption" color="text.secondary">
-                                                Added: {new Date(resource.dateAdded).toLocaleDateString()}
-                                            </Typography>
+                                            <Box>
+                                                <Divider sx={{ mb: 2 }} />
+                                                <Typography variant="caption" color="text.secondary">
+                                                    Added: {new Date(resource.dateAdded).toLocaleDateString()}
+                                                </Typography>
+                                            </Box>
                                         </CardContent>
                                     </Card>
                                 </Grid>
@@ -695,6 +761,65 @@ const Resources: React.FC = () => {
                         </Grid>
                     )}
                 </Box>
+
+                <Popper
+                    open={popupOpen && hoveredResource !== null}
+                    anchorEl={popupAnchor}
+                    placement="top"
+                    transition
+                    sx={{ zIndex: 1300 }}
+                    modifiers={[
+                        {
+                            name: 'offset',
+                            options: {
+                                offset: [0, 8],
+                            },
+                        },
+                    ]}
+                >
+                    {({ TransitionProps }) => (
+                        <Fade {...TransitionProps} timeout={200}>
+                            <Paper
+                                elevation={0}
+                                sx={{
+                                    background: theme.palette.mode === 'dark'
+                                        ? 'linear-gradient(135deg, rgba(25, 39, 52, 0.95) 0%, rgba(21, 32, 43, 0.95) 100%)'
+                                        : 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.95) 100%)',
+                                    backdropFilter: 'blur(20px)',
+                                    border: hoveredResource ? `1px solid ${getResourceColor(hoveredResource.type)}40` : '1px solid rgba(29, 161, 242, 0.3)',
+                                    borderRadius: 4,
+                                    p: 2,
+                                    maxWidth: 300,
+                                    boxShadow: `0 8px 16px rgba(0, 0, 0, 0.1)`,
+                                    '&::before': {
+                                        content: '""',
+                                        position: 'absolute',
+                                        bottom: -8,
+                                        left: '50%',
+                                        transform: 'translateX(-50%)',
+                                        width: 0,
+                                        height: 0,
+                                        borderLeft: '8px solid transparent',
+                                        borderRight: '8px solid transparent',
+                                        borderTop: hoveredResource 
+                                            ? `8px solid ${getResourceColor(hoveredResource.type)}40`
+                                            : '8px solid rgba(29, 161, 242, 0.3)',
+                                    }
+                                }}
+                            >
+                                {hoveredResource && (
+                                    <Typography variant="body1" fontWeight="500" sx={{ 
+                                        fontSize: '0.9rem',
+                                        lineHeight: 1.4,
+                                        textAlign: 'center'
+                                    }}>
+                                        {hoveredResource.name}
+                                    </Typography>
+                                )}
+                            </Paper>
+                        </Fade>
+                    )}
+                </Popper>
             </Box>
         </Box>
     );
