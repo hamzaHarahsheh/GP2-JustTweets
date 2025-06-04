@@ -1,9 +1,10 @@
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { Box, CssBaseline, CircularProgress, Typography, IconButton, Tooltip } from '@mui/material';
+import { Box, CssBaseline, CircularProgress, Typography, IconButton, Popper, Paper, Fade } from '@mui/material';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { CustomThemeProvider, useThemeContext } from './contexts/ThemeContext';
 import { LightMode as SunIcon, DarkMode as MoonIcon } from '@mui/icons-material';
+import { useTheme } from '@mui/material/styles';
 
 const Sidebar = lazy(() => import('./components/Sidebar'));
 const Timeline = lazy(() => import('./components/Timeline'));
@@ -25,9 +26,9 @@ const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => 
   return user ? <>{children}</> : <Navigate to="/login" />;
 };
 
-const LoadingFallback = () => (
-  <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
-    <CircularProgress />
+const LoadingFallback: React.FC = () => (
+  <Box display="flex" justifyContent="center" alignItems="center" height="50vh">
+    <CircularProgress color="primary" />
   </Box>
 );
 
@@ -36,6 +37,9 @@ const AppLayout: React.FC = () => {
   const { user } = useAuth();
   const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
   const { toggleTheme, mode } = useThemeContext();
+  const [tooltipOpen, setTooltipOpen] = useState(false);
+  const [tooltipAnchor, setTooltipAnchor] = useState<HTMLElement | null>(null);
+  const theme = useTheme();
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: 'inherit' }}>
@@ -46,9 +50,17 @@ const AppLayout: React.FC = () => {
       )}
       
       {user && !isAuthPage && (
-        <Tooltip title={`Switch to ${mode === 'dark' ? 'light' : 'dark'} mode`} arrow>
+        <>
           <IconButton
             onClick={toggleTheme}
+            onMouseEnter={(e) => {
+              setTooltipAnchor(e.currentTarget);
+              setTooltipOpen(true);
+            }}
+            onMouseLeave={() => {
+              setTooltipOpen(false);
+              setTooltipAnchor(null);
+            }}
             sx={{
               position: 'fixed',
               top: 20,
@@ -90,7 +102,62 @@ const AppLayout: React.FC = () => {
               }} />
             )}
           </IconButton>
-        </Tooltip>
+
+          <Popper
+            open={tooltipOpen}
+            anchorEl={tooltipAnchor}
+            placement="left"
+            transition
+            sx={{ zIndex: 1301 }}
+            modifiers={[
+              {
+                name: 'offset',
+                options: {
+                  offset: [0, 8],
+                },
+              },
+            ]}
+          >
+            {({ TransitionProps }) => (
+              <Fade {...TransitionProps} timeout={200}>
+                <Paper
+                  elevation={0}
+                  sx={{
+                    background: theme.palette.mode === 'dark'
+                      ? 'linear-gradient(135deg, rgba(25, 39, 52, 0.95) 0%, rgba(21, 32, 43, 0.95) 100%)'
+                      : 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.95) 100%)',
+                    backdropFilter: 'blur(20px)',
+                    border: '1px solid rgba(29, 161, 242, 0.3)',
+                    borderRadius: 4,
+                    p: 2,
+                    maxWidth: 200,
+                    boxShadow: `0 8px 16px rgba(0, 0, 0, 0.1)`,
+                    '&::after': {
+                      content: '""',
+                      position: 'absolute',
+                      right: -8,
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      width: 0,
+                      height: 0,
+                      borderTop: '8px solid transparent',
+                      borderBottom: '8px solid transparent',
+                      borderLeft: '8px solid rgba(29, 161, 242, 0.3)',
+                    }
+                  }}
+                >
+                  <Typography variant="body1" fontWeight="500" sx={{ 
+                    fontSize: '0.9rem',
+                    lineHeight: 1.4,
+                    textAlign: 'center'
+                  }}>
+                    Switch to {mode === 'dark' ? 'light' : 'dark'} mode
+                  </Typography>
+                </Paper>
+              </Fade>
+            )}
+          </Popper>
+        </>
       )}
 
       <main style={{ flex: 1, maxWidth: 600, margin: '0 auto', background: 'inherit' }}>
