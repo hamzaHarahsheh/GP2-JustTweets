@@ -82,7 +82,6 @@ public class UserController {
         try {
             User user = objectMapper.readValue(userJson, User.class);
             
-            // Basic validation
             if (user.getPassword() == null || user.getPassword().isEmpty()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body("Password is required");

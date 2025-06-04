@@ -8,7 +8,7 @@ interface Notification {
     postId?: string;
     content: string;
     read: boolean;
-    createdAt: string;
+    createdAt: string; 
 }
 
 interface PaginatedNotifications {
@@ -65,6 +65,30 @@ export const authService = {
             formData.append('profilePicture', credentials.profilePicture);
         }
         return (await api.post<User>('/users/register', formData)).data;
+    },
+
+    checkEmailAvailability: async (email: string): Promise<boolean> => {
+        try {
+            await api.get(`/users/email/${email}`);
+            return false;
+        } catch (error: any) {
+            if (error.response?.status === 404) {
+                return true;
+            }
+            return false;
+        }
+    },
+
+    checkUsernameAvailability: async (username: string): Promise<boolean> => {
+        try {
+            await api.get(`/users/username/${username}`);
+            return false;
+        } catch (error: any) {
+            if (error.response?.status === 404) {
+                return true;
+            }
+            return false;
+        }
     },
 };
 
@@ -202,3 +226,5 @@ export const notificationService = {
 };
 
 export default api; 
+
+

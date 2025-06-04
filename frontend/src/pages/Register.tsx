@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import {
@@ -10,8 +10,9 @@ import {
     Paper,
     Alert,
     Avatar,
+    CircularProgress,
 } from '@mui/material';
-import { postService } from '../services/api';
+import { authService } from '../services/api';
 
 const Register: React.FC = () => {
     const navigate = useNavigate();
@@ -22,11 +23,92 @@ const Register: React.FC = () => {
     const [bio, setBio] = useState('');
     const [profilePicture, setProfilePicture] = useState<File | null>(null);
     const [formError, setFormError] = useState<string | null>(null);
+    
+    const [emailError, setEmailError] = useState<string | null>(null);
+    const [usernameError, setUsernameError] = useState<string | null>(null);
+    const [emailChecking, setEmailChecking] = useState(false);
+    const [usernameChecking, setUsernameChecking] = useState(false);
+    const [emailAvailable, setEmailAvailable] = useState<boolean | null>(null);
+    const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
 
     const validateEmail = (email: string) => {
         const regex = /^[A-Za-z]+\d{2}@cit\.just\.edu\.jo$/;
         return regex.test(email);
     };
+
+    const checkEmailUniqueness = useCallback(async (emailToCheck: string) => {
+        if (!emailToCheck.trim()) {
+            setEmailError(null);
+            setEmailAvailable(null);
+            return;
+        }
+
+        if (!validateEmail(emailToCheck)) {
+            setEmailError('Email must be in the format username##@cit.just.edu.jo');
+            setEmailAvailable(null);
+            return;
+        }
+
+        setEmailChecking(true);
+        setEmailError(null);
+
+        try {
+            const isAvailable = await authService.checkEmailAvailability(emailToCheck);
+            setEmailAvailable(isAvailable);
+            if (!isAvailable) {
+                setEmailError('This email is already registered');
+            }
+        } catch (error) {
+            setEmailError('Unable to check email availability');
+            setEmailAvailable(null);
+        } finally {
+            setEmailChecking(false);
+        }
+    }, []);
+
+    const checkUsernameUniqueness = useCallback(async (usernameToCheck: string) => {
+        if (!usernameToCheck.trim()) {
+            setUsernameError(null);
+            setUsernameAvailable(null);
+            return;
+        }
+
+        setUsernameChecking(true);
+        setUsernameError(null);
+
+        try {
+            const isAvailable = await authService.checkUsernameAvailability(usernameToCheck);
+            setUsernameAvailable(isAvailable);
+            if (!isAvailable) {
+                setUsernameError('This username is already taken');
+            }
+        } catch (error) {
+            setUsernameError('Unable to check username availability');
+            setUsernameAvailable(null);
+        } finally {
+            setUsernameChecking(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            if (email) {
+                checkEmailUniqueness(email);
+            }
+        }, 500);
+
+        return () => clearTimeout(timeoutId);
+    }, [email, checkEmailUniqueness]);
+
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            if (username) {
+                checkUsernameUniqueness(username);
+            }
+        }, 500);
+
+        return () => clearTimeout(timeoutId);
+    }, [username, checkUsernameUniqueness]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -42,13 +124,40 @@ const Register: React.FC = () => {
             return;
         }
 
+        if (emailAvailable === false) {
+            setFormError('Please use a different email address');
+            return;
+        }
+
+        if (usernameAvailable === false) {
+            setFormError('Please choose a different username');
+            return;
+        }
+
+        if (emailAvailable === null || usernameAvailable === null) {
+            setFormError('Please wait for validation to complete');
+            return;
+        }
+
         try {
             await register(username, email, password, bio, profilePicture || undefined);
             navigate('/');
-        } catch (err) {
-            setFormError('Registration failed. Username or email might be taken.');
+        } catch (err: any) {
+            if (err.response?.data) {
+                if (typeof err.response.data === 'string') {
+                    setFormError(err.response.data);
+                } else {
+                    setFormError('Registration failed. Please try again.');
+                }
+            } else {
+                setFormError('Registration failed. Username or email might be taken.');
+            }
         }
     };
+
+    const isFormValid = emailAvailable === true && usernameAvailable === true && 
+                       !emailChecking && !usernameChecking && 
+                       username && email && password;
 
     return (
         <Container maxWidth="sm">
@@ -86,6 +195,11 @@ const Register: React.FC = () => {
                             onChange={(e) => setUsername(e.target.value)}
                             margin="normal"
                             required
+                            error={!!usernameError}
+                            helperText={usernameError || (usernameAvailable === true ? '✓ Username available' : '')}
+                            InputProps={{
+                                endAdornment: usernameChecking ? <CircularProgress size={20} /> : null,
+                            }}
                         />
                         <TextField
                             fullWidth
@@ -95,7 +209,14 @@ const Register: React.FC = () => {
                             onChange={(e) => setEmail(e.target.value)}
                             margin="normal"
                             required
-                            helperText="Format: username##@cit.just.edu.jo"
+                            error={!!emailError}
+                            helperText={
+                                emailError || 
+                                (emailAvailable === true ? '✓ Email available' : 'Format: username##@cit.just.edu.jo')
+                            }
+                            InputProps={{
+                                endAdornment: emailChecking ? <CircularProgress size={20} /> : null,
+                            }}
                         />
                         <TextField
                             fullWidth
@@ -139,6 +260,7 @@ const Register: React.FC = () => {
                             fullWidth
                             variant="contained"
                             sx={{ mt: 3, mb: 2 }}
+                            disabled={!isFormValid}
                         >
                             Register
                         </Button>
