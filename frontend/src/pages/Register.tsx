@@ -4,7 +4,6 @@ import { useAuth } from '../contexts/AuthContext';
 import { useThemeContext } from '../contexts/ThemeContext';
 import {
     Box,
-    Container,
     Typography,
     TextField,
     Button,
@@ -15,8 +14,10 @@ import {
     IconButton,
     Popper,
     Fade,
+    alpha,
+    Grid,
 } from '@mui/material';
-import { LightMode as SunIcon, DarkMode as MoonIcon } from '@mui/icons-material';
+import { LightMode as SunIcon, DarkMode as MoonIcon, School as SchoolIcon, CloudUpload as CloudUploadIcon } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
 import { authService } from '../services/api';
 
@@ -278,33 +279,140 @@ const Register: React.FC = () => {
                 )}
             </Popper>
 
-            <Container maxWidth="sm">
-                <Box
+            <Box sx={{ 
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                width: '100vw',
+                height: '100vh',
+                display: 'flex',
+                overflow: 'hidden'
+            }}>
+                <Box 
                     sx={{
-                        minHeight: '100vh',
+                        width: '50%',
+                        height: '100vh',
+                        backgroundImage: 'url(/JUSTlogo.png)',
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                        backgroundRepeat: 'no-repeat',
+                        position: 'relative',
+                        display: { xs: 'none', md: 'flex' },
+                        flexDirection: 'column',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        '&::before': {
+                            content: '""',
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            background: mode === 'dark' 
+                                ? 'linear-gradient(135deg, rgba(21, 32, 43, 0.85) 0%, rgba(25, 39, 52, 0.85) 100%)'
+                                : 'linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(240, 248, 255, 0.6) 100%)',
+                            zIndex: 1,
+                        }
+                    }}
+                >
+                    <Box sx={{ 
+                        position: 'relative', 
+                        zIndex: 2, 
+                        textAlign: 'center',
+                        px: 4,
+                        animation: 'fadeInUp 1s ease-out'
+                    }}>
+                        <SchoolIcon sx={{ 
+                            fontSize: 80, 
+                            color: mode === 'dark' ? 'white' : '#1976d2', 
+                            mb: 3,
+                            filter: 'drop-shadow(0 4px 20px rgba(0,0,0,0.3))'
+                        }} />
+                        <Typography 
+                            variant="h3" 
+                            fontWeight="700" 
+                            color={mode === 'dark' ? 'white' : '#1565c0'}
+                            gutterBottom
+                            sx={{ 
+                                textShadow: mode === 'dark' ? '0 2px 10px rgba(0,0,0,0.3)' : '0 2px 10px rgba(21, 101, 192, 0.3)',
+                                mb: 2,
+                                fontFamily: "Freestyle Script, cursive",
+                                fontSize: { xs: '3rem', md: '4rem' },
+                                letterSpacing: '-0.02em'
+                            }}
+                        >
+                            JustTweets
+                        </Typography>
+                        <Typography 
+                            variant="h6" 
+                            color={mode === 'dark' ? 'white' : '#1976d2'}
+                            sx={{ 
+                                opacity: 0.9,
+                                textShadow: mode === 'dark' ? '0 1px 5px rgba(0,0,0,0.2)' : '0 1px 5px rgba(25, 118, 210, 0.2)',
+                                maxWidth: 400,
+                                mx: 'auto',
+                                lineHeight: 1.6
+                            }}
+                        >
+                            Create your account and become part of the university community
+                        </Typography>
+                    </Box>
+                </Box>
+
+                <Box 
+                    sx={{
+                        width: { xs: '100%', md: '50%' },
+                        height: '100vh',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
+                        backgroundColor: theme.palette.background.default,
+                        p: 4,
+                        overflowY: 'auto'
                     }}
                 >
                     <Paper
-                        elevation={3}
+                        elevation={0}
                         sx={{
-                            p: 4,
+                            p: { xs: 4, sm: 6, md: 8 },
                             width: '100%',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
+                            maxWidth: 520,
+                            background: 'transparent',
+                            animation: 'fadeInRight 1s ease-out 0.3s both'
                         }}
                     >
-                        <Typography variant="h4" component="h1" gutterBottom>
-                            Register
-                        </Typography>
+                        <Box sx={{ textAlign: 'center', mb: 4 }}>
+                            <Typography 
+                                variant="h4" 
+                                fontWeight="600" 
+                                color="text.primary"
+                                sx={{ mb: 1 }}
+                            >
+                                Create Account
+                            </Typography>
+                            <Typography 
+                                variant="body1" 
+                                color="text.secondary"
+                                sx={{ opacity: 0.8 }}
+                            >
+                                Join your university social network
+                            </Typography>
+                        </Box>
+
                         {(error || formError) && (
-                            <Alert severity="error" sx={{ width: '100%', mb: 2 }}>
+                            <Alert 
+                                severity="error" 
+                                sx={{ 
+                                    width: '100%', 
+                                    mb: 3,
+                                    borderRadius: 3,
+                                    animation: 'slideDown 0.3s ease-out'
+                                }}
+                            >
                                 {error || formError}
                             </Alert>
                         )}
+
                         <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
                             <TextField
                                 fullWidth
@@ -317,6 +425,21 @@ const Register: React.FC = () => {
                                 helperText={usernameError || (usernameAvailable === true ? '✓ Username available' : '')}
                                 InputProps={{
                                     endAdornment: usernameChecking ? <CircularProgress size={20} /> : null,
+                                }}
+                                sx={{
+                                    mb: 2,
+                                    '& .MuiOutlinedInput-root': {
+                                        borderRadius: 3,
+                                        backgroundColor: alpha(theme.palette.background.paper, 0.5),
+                                        transition: 'all 0.3s ease',
+                                        '&:hover': {
+                                            backgroundColor: alpha(theme.palette.background.paper, 0.8),
+                                        },
+                                        '&.Mui-focused': {
+                                            backgroundColor: theme.palette.background.paper,
+                                            boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.2)}`,
+                                        }
+                                    }
                                 }}
                             />
                             <TextField
@@ -335,6 +458,21 @@ const Register: React.FC = () => {
                                 InputProps={{
                                     endAdornment: emailChecking ? <CircularProgress size={20} /> : null,
                                 }}
+                                sx={{
+                                    mb: 2,
+                                    '& .MuiOutlinedInput-root': {
+                                        borderRadius: 3,
+                                        backgroundColor: alpha(theme.palette.background.paper, 0.5),
+                                        transition: 'all 0.3s ease',
+                                        '&:hover': {
+                                            backgroundColor: alpha(theme.palette.background.paper, 0.8),
+                                        },
+                                        '&.Mui-focused': {
+                                            backgroundColor: theme.palette.background.paper,
+                                            boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.2)}`,
+                                        }
+                                    }
+                                }}
                             />
                             <TextField
                                 fullWidth
@@ -344,23 +482,66 @@ const Register: React.FC = () => {
                                 onChange={(e) => setPassword(e.target.value)}
                                 margin="normal"
                                 required
+                                sx={{
+                                    mb: 2,
+                                    '& .MuiOutlinedInput-root': {
+                                        borderRadius: 3,
+                                        backgroundColor: alpha(theme.palette.background.paper, 0.5),
+                                        transition: 'all 0.3s ease',
+                                        '&:hover': {
+                                            backgroundColor: alpha(theme.palette.background.paper, 0.8),
+                                        },
+                                        '&.Mui-focused': {
+                                            backgroundColor: theme.palette.background.paper,
+                                            boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.2)}`,
+                                        }
+                                    }
+                                }}
                             />
                             <TextField
                                 fullWidth
-                                label="Bio"
+                                label="Bio (Optional)"
                                 multiline
                                 rows={3}
                                 value={bio}
                                 onChange={(e) => setBio(e.target.value)}
                                 margin="normal"
+                                sx={{
+                                    mb: 3,
+                                    '& .MuiOutlinedInput-root': {
+                                        borderRadius: 3,
+                                        backgroundColor: alpha(theme.palette.background.paper, 0.5),
+                                        transition: 'all 0.3s ease',
+                                        '&:hover': {
+                                            backgroundColor: alpha(theme.palette.background.paper, 0.8),
+                                        },
+                                        '&.Mui-focused': {
+                                            backgroundColor: theme.palette.background.paper,
+                                            boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.2)}`,
+                                        }
+                                    }
+                                }}
                             />
                             <Button
                                 variant="outlined"
                                 component="label"
                                 fullWidth
-                                sx={{ mt: 2 }}
+                                startIcon={<CloudUploadIcon />}
+                                sx={{ 
+                                    py: 1.5,
+                                    mb: 3,
+                                    borderRadius: 3,
+                                    textTransform: 'none',
+                                    borderColor: alpha(theme.palette.primary.main, 0.3),
+                                    color: theme.palette.text.secondary,
+                                    backgroundColor: alpha(theme.palette.background.paper, 0.5),
+                                    '&:hover': {
+                                        backgroundColor: alpha(theme.palette.primary.main, 0.1),
+                                        borderColor: theme.palette.primary.main,
+                                    }
+                                }}
                             >
-                                Upload Profile Picture
+                                {profilePicture ? `Selected: ${profilePicture.name}` : 'Upload Profile Picture (Optional)'}
                                 <input
                                     type="file"
                                     hidden
@@ -368,30 +549,95 @@ const Register: React.FC = () => {
                                     onChange={(e) => setProfilePicture(e.target.files?.[0] || null)}
                                 />
                             </Button>
-                            {profilePicture && (
-                                <Typography variant="body2" sx={{ mt: 1 }}>
-                                    Selected: {profilePicture.name}
-                                </Typography>
-                            )}
+                            
                             <Button
                                 type="submit"
                                 fullWidth
                                 variant="contained"
-                                sx={{ mt: 3, mb: 2 }}
+                                size="large"
                                 disabled={!isFormValid}
+                                sx={{ 
+                                    py: 1.8,
+                                    fontSize: '1.1rem',
+                                    fontWeight: 600,
+                                    borderRadius: 3,
+                                    textTransform: 'none',
+                                    background: isFormValid 
+                                        ? 'linear-gradient(45deg, #1DA1F2 30%, #1976d2 90%)'
+                                        : alpha(theme.palette.action.disabled, 0.12),
+                                    boxShadow: isFormValid ? '0 8px 25px rgba(29, 161, 242, 0.3)' : 'none',
+                                    transition: 'all 0.3s ease',
+                                    '&:hover': {
+                                        transform: isFormValid ? 'translateY(-2px)' : 'none',
+                                        boxShadow: isFormValid ? '0 12px 35px rgba(29, 161, 242, 0.4)' : 'none',
+                                    },
+                                    '&:active': {
+                                        transform: 'translateY(0px)',
+                                    },
+                                    mb: 3
+                                }}
                             >
-                                Register
+                                Create Account
                             </Button>
-                            <Typography variant="body2" align="center">
-                                Already have an account?{' '}
-                                <Link to="/login" style={{ textDecoration: 'none' }}>
-                                    Login
-                                </Link>
-                            </Typography>
+                            <Box sx={{ textAlign: 'center' }}>
+                                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                                    Already have an account?
+                                </Typography>
+                                <Button
+                                    component={Link}
+                                    to="/login"
+                                    variant="text"
+                                    sx={{ 
+                                        fontWeight: 600,
+                                        textTransform: 'none',
+                                        fontSize: '1rem',
+                                        '&:hover': {
+                                            backgroundColor: alpha(theme.palette.primary.main, 0.1),
+                                        }
+                                    }}
+                                >
+                                    Sign In
+                                </Button>
+                            </Box>
                         </Box>
                     </Paper>
                 </Box>
-            </Container>
+            </Box>
+
+            <style>
+                {`
+                @keyframes fadeInUp {
+                    from {
+                        opacity: 0;
+                        transform: translateY(30px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+                @keyframes fadeInRight {
+                    from {
+                        opacity: 0;
+                        transform: translateX(30px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateX(0);
+                    }
+                }
+                @keyframes slideDown {
+                    from {
+                        opacity: 0;
+                        transform: translateY(-10px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+                `}
+            </style>
         </>
     );
 };
