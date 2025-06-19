@@ -175,11 +175,8 @@ export const userService = {
     },
 
     updateBio: async (id: string, bio: string): Promise<User> => {
-        console.log('Updating bio for user:', id, 'with bio:', bio);
         const requestData = { bio };
-        console.log('Sending request data:', requestData);
         const response = await api.put<User>(`/users/${id}/bio`, requestData);
-        console.log('Bio update response:', response.data);
         return response.data;
     },
 
@@ -239,6 +236,27 @@ export const roleService = {
         const response = await api.get<Role[]>(`/roles/user/${userId}`);
         return response.data;
     },
+};
+
+export const getProfilePictureUrl = (userId: string): string => {
+  return `http://localhost:8081/api/user/${userId}/profile-picture`;
+};
+
+export const getProfilePictureSrc = (profilePicture: string | null, userId?: string): string | undefined => {
+  if (profilePicture) {
+    if (profilePicture.startsWith('/api')) {
+      return `http://localhost:8081${profilePicture}`;
+    }
+    if (profilePicture.startsWith('http')) {
+      return profilePicture;
+    }
+  }
+  
+  if (userId) {
+    return getProfilePictureUrl(userId);
+  }
+  
+  return undefined;
 };
 
 export default api; 

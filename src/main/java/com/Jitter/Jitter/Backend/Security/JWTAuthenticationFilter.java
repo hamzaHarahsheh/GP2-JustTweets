@@ -9,64 +9,45 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+@Component
 public class JWTAuthenticationFilter extends OncePerRequestFilter {
 
     @Autowired
-    private JWTGenerator jwtGenerator;
+    private JWTGenerator tokenGenerator;
+
     @Autowired
-    private CustomeUserDetailsService customeUserDetailsService;
+    private CustomeUserDetailsService customUserDetailsService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
-        String path = request.getRequestURI();
-        if (path.startsWith("/users/register") ||
-            path.startsWith("/users/login") ||
-            path.startsWith("/users/username") ||
-            path.startsWith("/users/email")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-        
         try {
             String token = getJWTFromRequest(request);
-            System.out.println("JWT Token received: " + token);
-            if(token != null && jwtGenerator.validateToken(token)) {
-                System.out.println("JWT Token is valid");
-                String username = jwtGenerator.getUsernameFromJWT(token);
-                System.out.println("Username from JWT: " + username);
-                
-                try {
-                    UserDetails userDetails = customeUserDetailsService.loadUserByUsername(username);
-                    UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
-                            userDetails, null, userDetails.getAuthorities());
-                    authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    SecurityContextHolder.getContext().setAuthentication(authenticationToken);
-                    System.out.println("Authentication set successfully for user: " + username);
-                } catch (Exception e) {
-                    System.out.println("Failed to load user details for username: " + username + ", Error: " + e.getMessage());
-                    SecurityContextHolder.clearContext();
-                }
-            } else {
-                System.out.println("JWT Token is invalid or missing");
-                SecurityContextHolder.clearContext();
+            
+            if (StringUtils.hasText(token) && tokenGenerator.validateToken(token)) {
+                String username = tokenGenerator.getUsernameFromJWT(token);
+
+                UserDetails userDetails = customUserDetailsService.loadUserByUsername(username);
+                UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
+                        userDetails, null, userDetails.getAuthorities());
+                authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authenticationToken);
             }
-        } catch (Exception e) {
-            System.out.println("Error in JWT filter: " + e.getMessage());
-            SecurityContextHolder.clearContext();
+        } catch (Exception ex) {
         }
-        
         filterChain.doFilter(request, response);
     }
 
     private String getJWTFromRequest(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");
-        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
             return bearerToken.substring(7);
         }
         return null;

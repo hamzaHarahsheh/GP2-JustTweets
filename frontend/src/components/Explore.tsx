@@ -8,6 +8,7 @@ import { Box, Typography, CircularProgress, Paper, TextField, InputAdornment, Ic
 import { useTheme } from '@mui/material/styles';
 import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
+import MessageIcon from '@mui/icons-material/Message';
 
 const POSTS_PER_PAGE = 10;
 
@@ -256,29 +257,46 @@ const Explore: React.FC = () => {
                                             }}
                                             secondaryAction={
                                                 result.id !== user?.id && (
-                                                    <Button
-                                                        variant={followingIds.has(result.id) ? 'contained' : 'outlined'}
-                                                        size="small"
-                                            onClick={() => handleFollow(result.id)}
-                                                        sx={{
-                                                            borderRadius: 20,
-                                                            px: 3,
-                                                            textTransform: 'none',
-                                                            fontWeight: 600,
-                                                            minWidth: 100,
-                                                            background: followingIds.has(result.id) 
-                                                                ? 'linear-gradient(45deg, #1DA1F2 30%, #1976d2 90%)'
-                                                                : 'transparent',
-                                                            '&:hover': {
-                                                                transform: 'translateY(-2px)',
-                                                                boxShadow: followingIds.has(result.id) 
-                                                                    ? '0 4px 12px rgba(29, 161, 242, 0.3)'
-                                                                    : '0 2px 8px rgba(0,0,0,0.1)'
-                                                            }
-                                                        }}
-                                                    >
-                                                        {followingIds.has(result.id) ? 'Following' : 'Follow'}
-                                                    </Button>
+                                                    <Box sx={{ display: 'flex', gap: 1 }}>
+                                                        <IconButton
+                                                            size="small"
+                                                            onClick={() => {
+                                                                navigate('/messages');
+                                                            }}
+                                                            sx={{
+                                                                bgcolor: 'rgba(29, 161, 242, 0.1)',
+                                                                '&:hover': {
+                                                                    bgcolor: 'rgba(29, 161, 242, 0.2)',
+                                                                    transform: 'scale(1.1)'
+                                                                }
+                                                            }}
+                                                        >
+                                                            <MessageIcon sx={{ fontSize: 18 }} />
+                                                        </IconButton>
+                                                        <Button
+                                                            variant={followingIds.has(result.id) ? 'contained' : 'outlined'}
+                                                            size="small"
+                                                onClick={() => handleFollow(result.id)}
+                                                            sx={{
+                                                                borderRadius: 20,
+                                                                px: 3,
+                                                                textTransform: 'none',
+                                                                fontWeight: 600,
+                                                                minWidth: 100,
+                                                                background: followingIds.has(result.id) 
+                                                                    ? 'linear-gradient(45deg, #1DA1F2 30%, #1976d2 90%)'
+                                                                    : 'transparent',
+                                                                '&:hover': {
+                                                                    transform: 'translateY(-2px)',
+                                                                    boxShadow: followingIds.has(result.id) 
+                                                                        ? '0 4px 12px rgba(29, 161, 242, 0.3)'
+                                                                        : '0 2px 8px rgba(0,0,0,0.1)'
+                                                                }
+                                                            }}
+                                                        >
+                                                            {followingIds.has(result.id) ? 'Following' : 'Follow'}
+                                                        </Button>
+                                                    </Box>
                                                 )
                                             }
                                         >

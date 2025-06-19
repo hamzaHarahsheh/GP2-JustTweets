@@ -2,6 +2,7 @@ import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { userService, postService } from '../services/api';
+import { chatService } from '../services/chatService';
 import { User, Post as PostType } from '../types';
 import {
     Box,
@@ -18,8 +19,9 @@ import {
     Divider,
     useTheme,
     CircularProgress,
+    IconButton,
 } from '@mui/material';
-import { Edit as EditIcon } from '@mui/icons-material';
+import { Edit as EditIcon, Message as MessageIcon } from '@mui/icons-material';
 
 const Post = lazy(() => import('./Post'));
 const EditProfileDialog = lazy(() => import('./dialogs/EditProfileDialog'));
@@ -102,7 +104,6 @@ const Profile: React.FC = () => {
             }
             
             if (bio !== (profileUser.bio || '')) {
-                console.log('Updating bio from:', profileUser.bio, 'to:', bio);
                 updatedUser = await userService.updateBio(profileUser.id, bio);
             }
             
@@ -176,6 +177,53 @@ const Profile: React.FC = () => {
     const handleNavigateToProfile = (username: string, closeDialog: () => void) => {
         closeDialog();
         navigate(`/profile/${username}`);
+    };
+
+    const handleStartChat = async () => {
+        if (!profileUser || !currentUser) {
+            console.error('Missing user data:', { profileUser, currentUser });
+            alert('User data not available. Please refresh the page and try again.');
+            return;
+        }
+        
+        if (profileUser.id === currentUser.id) {
+            alert('You cannot start a chat with yourself!');
+            return;
+        }
+        
+        try {
+            if (!profileUser.id || profileUser.id.trim() === '') {
+                throw new Error('Invalid profile user ID');
+            }
+            
+            const chat = await chatService.createOrGetChat(profileUser.id);
+            
+            navigate('/messages');
+        } catch (error: any) {
+            console.error('Error starting chat:', {
+                error,
+                response: error.response?.data,
+                status: error.response?.status,
+                profileUserId: profileUser.id,
+                headers: error.response?.headers
+            });
+            
+            let errorMessage = 'Unknown error occurred';
+            
+            if (error.response?.status === 400) {
+                errorMessage = 'Invalid request. Please make sure both users exist and try again.';
+            } else if (error.response?.status === 401) {
+                errorMessage = 'Authentication failed. Please log in again.';
+            } else if (error.response?.status === 404) {
+                errorMessage = 'User not found. Please refresh the page and try again.';
+            } else if (error.response?.data) {
+                errorMessage = typeof error.response.data === 'string' 
+                    ? error.response.data 
+                    : error.response.data.message || 'Server error occurred';
+            }
+            
+            alert(`Failed to start chat: ${errorMessage}`);
+        }
     };
 
     if (loading) {
@@ -264,15 +312,33 @@ const Profile: React.FC = () => {
                         Edit
                     </Button>
                 ) : (
-                    <Button
-                        variant={isFollowing ? 'contained' : 'outlined'}
-                        color={isFollowing ? 'primary' : 'inherit'}
-                        sx={{ ml: 'auto', borderRadius: 3, textTransform: 'none' }}
-                        onClick={handleFollow}
-                        disabled={followLoading}
-                    >
-                        {isFollowing ? 'Following' : 'Follow'}
-                    </Button>
+                    <Box sx={{ ml: 'auto', display: 'flex', gap: 1, alignItems: 'center' }}>
+                        <IconButton
+                            onClick={handleStartChat}
+                            sx={{
+                                bgcolor: 'rgba(29, 161, 242, 0.1)',
+                                border: '1px solid rgba(29, 161, 242, 0.3)',
+                                borderRadius: 2,
+                                '&:hover': {
+                                    bgcolor: 'rgba(29, 161, 242, 0.2)',
+                                    transform: 'scale(1.05)',
+                                    boxShadow: '0 2px 8px rgba(29, 161, 242, 0.3)'
+                                },
+                                transition: 'all 0.2s ease'
+                            }}
+                        >
+                            <MessageIcon sx={{ fontSize: 20, color: 'primary.main' }} />
+                        </IconButton>
+                        <Button
+                            variant={isFollowing ? 'contained' : 'outlined'}
+                            color={isFollowing ? 'primary' : 'inherit'}
+                            sx={{ borderRadius: 3, textTransform: 'none' }}
+                            onClick={handleFollow}
+                            disabled={followLoading}
+                        >
+                            {isFollowing ? 'Following' : 'Follow'}
+                        </Button>
+                    </Box>
                 )}
             </Box>
 

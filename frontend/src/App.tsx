@@ -13,6 +13,7 @@ const Explore = lazy(() => import('./components/Explore'));
 const Resources = lazy(() => import('./components/Resources'));
 const Notifications = lazy(() => import('./components/Notifications'));
 const PostDetail = lazy(() => import('./components/PostDetail'));
+const Chat = lazy(() => import('./components/Chat'));
 const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
 
@@ -36,6 +37,7 @@ const AppLayout: React.FC = () => {
   const location = useLocation();
   const { user } = useAuth();
   const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
+  const isChatPage = location.pathname === '/messages';
   const { toggleTheme, mode } = useThemeContext();
   const [tooltipOpen, setTooltipOpen] = useState(false);
   const [tooltipAnchor, setTooltipAnchor] = useState<HTMLElement | null>(null);
@@ -43,7 +45,7 @@ const AppLayout: React.FC = () => {
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: 'inherit' }}>
-      {user && !isAuthPage && (
+      {user && !isAuthPage && !isChatPage && (
         <Suspense fallback={<LoadingFallback />}>
           <Sidebar />
         </Suspense>
@@ -160,7 +162,13 @@ const AppLayout: React.FC = () => {
         </>
       )}
 
-      <main style={{ flex: 1, maxWidth: 600, margin: '0 auto', background: 'inherit' }}>
+      <main style={{ 
+        flex: 1, 
+        maxWidth: isChatPage ? '100%' : 600, 
+        margin: isChatPage ? '0' : '0 auto', 
+        background: 'inherit',
+        padding: isChatPage ? 0 : undefined
+      }}>
         <Suspense fallback={<LoadingFallback />}>
           <Routes>
             <Route path="/login" element={<Login />} />
@@ -194,6 +202,17 @@ const AppLayout: React.FC = () => {
               element={
                 <PrivateRoute>
                   <Notifications />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/messages"
+              element={
+                <PrivateRoute>
+                  <Chat 
+                    currentUserId={user?.id || ''} 
+                    currentUsername={user?.username || ''}
+                  />
                 </PrivateRoute>
               }
             />

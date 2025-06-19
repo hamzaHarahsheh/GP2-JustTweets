@@ -9,6 +9,7 @@ import {
     Person as PersonIcon,
     Logout as LogoutIcon,
     School as SchoolIcon,
+    Message as MessageIcon,
 } from '@mui/icons-material';
 import {
     List,
@@ -81,6 +82,7 @@ const Sidebar: React.FC = () => {
     const menuItems = [
         { name: 'Home', icon: <HomeIcon />, path: '/' },
         { name: 'Explore', icon: <ExploreIcon />, path: '/explore' },
+        { name: 'Messages', icon: <MessageIcon />, path: '/messages' },
         { name: 'Resources', icon: <SchoolIcon />, path: '/resources' },
         { 
             name: 'Notifications', 
