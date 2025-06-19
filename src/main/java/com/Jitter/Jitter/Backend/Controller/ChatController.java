@@ -166,7 +166,6 @@ public class ChatController {
                                     );
                                 }
                             } catch (Exception e) {
-                                // Error sending WebSocket message
                             }
                         }
                     });

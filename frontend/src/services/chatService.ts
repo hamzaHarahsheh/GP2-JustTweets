@@ -155,6 +155,16 @@ class ChatServiceClass {
       }
     });
   }
+
+  async getTotalUnreadCount(): Promise<number> {
+    try {
+      const chats = await this.getUserChats();
+      return chats.reduce((total, chat) => total + chat.unreadCount, 0);
+    } catch (error) {
+      console.error('Error fetching total unread count:', error);
+      return 0;
+    }
+  }
 }
 
 export const chatService = new ChatServiceClass(); 

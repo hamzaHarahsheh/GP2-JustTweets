@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { notificationService } from '../services/api';
+import { chatService } from '../services/chatService';
 import {
     Home as HomeIcon,
     Explore as ExploreIcon,
@@ -33,6 +34,7 @@ const Sidebar: React.FC = () => {
     const { user, logout } = useAuth();
     const [dialogOpen, setDialogOpen] = useState(false);
     const [unreadCount, setUnreadCount] = useState(0);
+    const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
     const [showWelcome, setShowWelcome] = useState(true);
     const theme = useTheme();
     const userId = user?.id;
@@ -40,7 +42,11 @@ const Sidebar: React.FC = () => {
     useEffect(() => {
         if (userId) {
             fetchUnreadCount();
-            const interval = setInterval(fetchUnreadCount, 30000);
+            fetchUnreadMessagesCount();
+            const interval = setInterval(() => {
+                fetchUnreadCount();
+                fetchUnreadMessagesCount();
+            }, 30000);
             return () => clearInterval(interval);
         }
     }, [userId]);
@@ -72,9 +78,23 @@ const Sidebar: React.FC = () => {
         }
     };
 
+    const fetchUnreadMessagesCount = async () => {
+        if (!userId) return;
+        
+        try {
+            const unreadMessagesCount = await chatService.getTotalUnreadCount();
+            setUnreadMessagesCount(unreadMessagesCount);
+        } catch (error) {
+            console.error('Error fetching unread messages count:', error);
+        }
+    };
+
     const handleMenuItemClick = (path: string) => {
         if (path === '/notifications' && unreadCount > 0) {
             setUnreadCount(0);
+        }
+        if (path === '/messages' && unreadMessagesCount > 0) {
+            setTimeout(() => fetchUnreadMessagesCount(), 1000);
         }
         navigate(path);
     };
@@ -82,7 +102,17 @@ const Sidebar: React.FC = () => {
     const menuItems = [
         { name: 'Home', icon: <HomeIcon />, path: '/' },
         { name: 'Explore', icon: <ExploreIcon />, path: '/explore' },
-        { name: 'Messages', icon: <MessageIcon />, path: '/messages' },
+        { 
+            name: 'Messages', 
+            icon: unreadMessagesCount > 0 ? (
+                <Badge badgeContent={unreadMessagesCount} color="error">
+                    <MessageIcon />
+                </Badge>
+            ) : (
+                <MessageIcon />
+            ), 
+            path: '/messages' 
+        },
         { name: 'Resources', icon: <SchoolIcon />, path: '/resources' },
         { 
             name: 'Notifications', 

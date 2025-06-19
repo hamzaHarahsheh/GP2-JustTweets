@@ -250,6 +250,9 @@ export const getProfilePictureSrc = (profilePicture: string | null, userId?: str
     if (profilePicture.startsWith('http')) {
       return profilePicture;
     }
+    if (userId) {
+      return `http://localhost:8081/api/user/${userId}/${profilePicture}`;
+    }
   }
   
   if (userId) {
