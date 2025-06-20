@@ -63,7 +63,18 @@
 - **Intuitive Navigation** with sidebar and routing
 - **Loading States** and error handling
 
+### 💬 Chat System
+- **Real-time Messaging** with WebSocket support
+- **Private Conversations** between users
+- **Message History** with pagination
+- **Read Status Tracking** and unread counts
+- **Message Types** support (text, images, files)
+- **Chat List Management** with last message preview
+- **Auto-reconnection** for reliable messaging
+- **Message Delivery Notifications** in real-time
+
 ### 🔔 Real-time Features
+- **WebSocket Chat** with instant message delivery
 - **Notification System** for likes, comments, and follows
 - **Live Search** with debounced queries
 - **Real-time Updates** for user interactions
@@ -83,6 +94,7 @@
 - **☕ Java 17** - Modern Java with latest features
 - **🍃 Spring Boot 3.2.3** - Enterprise-grade framework
 - **🔒 Spring Security** - Authentication & authorization
+- **🔌 Spring WebSocket** - Real-time messaging with STOMP
 - **✅ Spring Validation** - Input validation and constraints
 - **🍃 Spring Data MongoDB** - Database abstraction layer
 - **🎫 JWT (JSON Web Tokens)** - Stateless authentication
@@ -95,6 +107,8 @@
 - **🎨 Material-UI 7.0.2** - React component library
 - **🛣️ React Router DOM** - Client-side routing
 - **📡 Axios** - HTTP client for API calls
+- **🔌 WebSocket** - Real-time communication with STOMP/SockJS
+- **💬 SockJS Client** - WebSocket fallback support
 - **🪝 React Hooks** - State management and effects
 - **📅 date-fns** - Date manipulation library
 - **🔍 Lucide React** - Beautiful icon library
@@ -240,6 +254,27 @@ logging.level.com.Jitter.Jitter.Backend=INFO
 | `PUT` | `/notifications/{id}/read` | Mark as read | ✅ |
 | `DELETE` | `/notifications/{id}` | Delete notification | ✅ |
 
+### 💬 Chat Endpoints
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| `POST` | `/api/chat/create/{otherUserId}` | Create or get chat with user | ✅ |
+| `GET` | `/api/chat/list` | Get user's chat list | ✅ |
+| `GET` | `/api/chat/{chatId}/messages` | Get chat messages (paginated) | ✅ |
+| `POST` | `/api/chat/{chatId}/send` | Send message to chat | ✅ |
+| `PUT` | `/api/chat/{chatId}/read` | Mark chat messages as read | ✅ |
+| `DELETE` | `/api/chat/message/{messageId}` | Delete a message | ✅ |
+
+### 🔌 WebSocket Endpoints
+
+| Endpoint | Description | Auth Required |
+|----------|-------------|---------------|
+| `/ws` | WebSocket connection endpoint | ✅ |
+| `/app/chat.sendMessage` | Send message via WebSocket | ✅ |
+| `/app/test` | Test WebSocket connection | ✅ |
+| `/user/{userId}/queue/messages` | User-specific message queue | ✅ |
+| `/topic/messages` | Global message topic | ✅ |
+
 ---
 
 ## �� Project Structure
@@ -279,6 +314,7 @@ GP2-JustTweets/
 │ │ │ ├── Notifications.tsx # 🔔 Notifications Component
 │ │ │ ├── Resources.tsx # 📚 Resources Component
 │ │ │ ├── PostDetail.tsx # 📖 Individual Post View
+│ │ │ ├── Chat.tsx # 💬 Real-time Chat Component
 │ │ │ └── dialogs/ # 💬 Modal Dialog Components
 │ │ ├── pages/ # 📄 Route Pages
 │ │ │ ├── Login.tsx # 🔐 Login Page
@@ -286,6 +322,9 @@ GP2-JustTweets/
 │ │ ├── hooks/ # 🪝 Custom React Hooks
 │ │ ├── contexts/ # 🌐 React Context Providers
 │ │ ├── services/ # 📡 API Service Layer
+│ │ │ ├── api.ts # 🌐 Main API service
+│ │ │ ├── chatService.ts # 💬 Chat API integration
+│ │ │ └── websocketService.ts # 🔌 WebSocket service
 │ │ ├── utils/ # 🛠️ Utility Functions
 │ │ ├── types/ # 📋 TypeScript Type Definitions
 │ │ ├── App.tsx # 🏠 Main App Component
